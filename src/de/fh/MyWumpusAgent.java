@@ -64,6 +64,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
          if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
         	Vector2 startPos = new Vector2(100, 100);
      		this.hunterPos = startPos; 
+     		stenchRadar = percept.getWumpusStenchRadar();
      		this.stateUpdater = new StateUpdater(this.currView, this.percept, startPos, this.stenchRadar, this.startInfo);
          }
 

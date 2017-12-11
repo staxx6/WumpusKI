@@ -36,6 +36,7 @@ public class StateUpdater {
  			for(int y = 0; y < startPos.getY() * 2; y++) {
  				this.view.add(new ArrayList<>());
  				for(int x = 0; x < startPos.getX() * 2; x++) {
+ 					this.view.get(y).add(null);
  					if(y == startPos.getY() && x == startPos.getX())
  						getNode(x, y).setTileType(TileType.HUNTER);
  					else

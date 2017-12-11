@@ -1,5 +1,6 @@
 package de.fh;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +34,7 @@ public class Node {
 	 */
 	public void setTileType(final TileType type) {
 		this.type = type;
-		possibleTypes.clear();
+		if(this.possibleTypes != null) this.possibleTypes.clear();
 	}
 	
 	public TileType getTileType() {
@@ -76,6 +77,7 @@ public class Node {
 	}
 	
 	public void addPossibleType(final TileType type) {
+		if(this.possibleTypes == null) this.possibleTypes = new ArrayList<>();
 		if(this.type == TileType.UNKNOWN)
 			this.possibleTypes.add(type);
 	}
