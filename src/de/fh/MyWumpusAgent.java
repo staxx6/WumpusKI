@@ -24,7 +24,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	
 	private List<List<Node>> currView;	
 	private StateUpdater stateUpdater;
-	private Vector2 pos;
+	private Vector2 hunterPos;
 	
 	public static void main(String[] args) {
 
@@ -62,16 +62,14 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
          if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
         	Vector2 startPos = new Vector2(100, 100);
-     		this.pos = startPos; 
-     		StateUpdater stateUpdater = new StateUpdater(this.currView, this.percept, startPos);
+     		this.hunterPos = startPos; 
+     		this.stateUpdater = new StateUpdater(this.currView, this.percept, startPos);
          }
-         /*
 
          if(actionEffect == HunterActionEffect.GAME_OVER) {
-         //Das Spiel ist verloren
+        	 System.out.println("DEBUG: Game Over!");         	
          }
 
-		*/
          if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
         	 System.out.println("DEBUG: Bumped into wall!");
          }
@@ -82,29 +80,27 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
          /*
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
-         //Letzte Bewegungsaktion war gültig
+        	 //Nothing
          }
+         */
 
          if(actionEffect == HunterActionEffect.GOLD_FOUND) {
-         //Gold wurde aufgesammelt
+        	 System.out.println("DEBUG: Collected gold!");
          }
 
          if(actionEffect == HunterActionEffect.WUMPUS_KILLED) {
-         //Ein Wumpus wurde getroffen
+        	 System.out.println("DEBUG: Wumpus killed!");
          }
 
          if(actionEffect == HunterActionEffect.NO_MORE_SHOOTS) {
-         //Schuss ungültig, keine Pfeile mehr
+        	 System.out.println("DEBUG: No more arrows!");
          }
-         */
 
 		System.out.println("-------------------------------");
 		this.actionEffect = actionEffect;
 		System.out.println(actionEffect.toString()+ "\n");
 
 		/*
-		Mögliche Percepts über die Welt erhält der Wumpushunter:
-
 		percept.isBreeze();
         percept.isBump();
         percept.isGlitter(); Angrenzende Wand
@@ -121,9 +117,12 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		*/
 		
 		// --------------------------------------------------------------
-		stateUpdater.update();
+		
+		this.stateUpdater.update(hunterPos);
+		
 		// --------------------------------------------------------------
 		
+		/*
 		//Beispiel:
 		stenchRadar = this.percept.getWumpusStenchRadar();
 
@@ -136,8 +135,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		for(Map.Entry<Integer, Integer> g : stenchRadar.entrySet()){
 			System.out.println(g.getKey() + ":\t\t" + g.getValue() );
 		}
+		 */
 		System.out.println("");
-
 
 	}
 

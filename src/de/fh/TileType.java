@@ -1,6 +1,7 @@
 package de.fh;
 
 public enum TileType {
+	
 	UNKNOWN('U'),
 	EMPTY('E'),
 	WALL('W'),
@@ -12,6 +13,7 @@ public enum TileType {
 	GOLD('G');
 	
 	private final char symbol; 
+	
 	TileType(char symbol) {
 		this.symbol = symbol;
 	}

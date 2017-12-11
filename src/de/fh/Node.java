@@ -7,7 +7,7 @@ import de.fh.util.Vector2;
 public class Node {
 	private TileType type;
 	private Vector2 pos;
-	private List<TileType> possibleStates;
+	private List<TileType> possibleTypes;
 	
 	public Node(final TileType type, final Vector2 pos) {
 		this.type = type;
@@ -51,11 +51,11 @@ public class Node {
 		return this.pos.getY();
 	}
 
-	public List<TileType> getPossibleStates() {
-		return possibleStates;
+	public List<TileType> getPossibleTypes() {
+		return possibleTypes;
 	}
 
-	public void setPossibleStates(List<TileType> possibleStates) {
-		this.possibleStates = possibleStates;
+	public void setPossibleTypes(List<TileType> possibleTypes) {
+		this.possibleTypes = possibleTypes;
 	}
 }
