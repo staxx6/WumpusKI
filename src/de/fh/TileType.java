@@ -8,8 +8,7 @@ public enum TileType {
 	HUNTER('H'),
 	WUMPUS('X'),
 	PIT('P'),
-	STENCH('S'),
-	BREEZE('B'),
+	BREEZE('B'), // TODO: Not needed? @Node attr.
 	GOLD('G');
 	
 	private final char symbol; 

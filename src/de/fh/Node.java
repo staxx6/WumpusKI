@@ -1,13 +1,21 @@
 package de.fh;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import de.fh.util.Vector2;
+
+/*
+ * TODO: Naming fail?
+ */
 
 public class Node {
 	private TileType type;
 	private Vector2 pos;
 	private List<TileType> possibleTypes;
+	private boolean breeze = false;
+	private Set<Integer> wumpusIds;
 	
 	public Node(final TileType type, final Vector2 pos) {
 		this.type = type;
@@ -19,8 +27,13 @@ public class Node {
 		this.pos = new Vector2(x, y);
 	}
 	
+	/*
+	 * Set a KNOWN type
+	 * It clears the possible types 
+	 */
 	public void setTileType(final TileType type) {
 		this.type = type;
+		possibleTypes.clear();
 	}
 	
 	public TileType getTileType() {
@@ -56,6 +69,38 @@ public class Node {
 	}
 
 	public void setPossibleTypes(List<TileType> possibleTypes) {
-		this.possibleTypes = possibleTypes;
+		if(this.type == TileType.UNKNOWN)
+			this.possibleTypes = possibleTypes;
+		else
+			System.out.println("Don't need to add possible types, type should be clear!");
+	}
+	
+	public void addPossibleType(final TileType type) {
+		if(this.type == TileType.UNKNOWN)
+			this.possibleTypes.add(type);
+	}
+
+	public boolean isBreeze() {
+		return breeze;
+	}
+
+	public void setBreeze(boolean breeze) {
+		this.breeze = breeze;
+	}
+
+	/*
+	 * @return Could be a null return 
+	 */
+	public Set<Integer> getWumpusIds() {
+		return wumpusIds;
+	}
+
+	public void addWumpusId(final int id) {
+		if(this.wumpusIds == null) this.wumpusIds = new HashSet<>();
+		this.wumpusIds.add(id);
+	}
+	
+	public void removeWumpusId(final int id) {
+		this.wumpusIds.remove(id);
 	}
 }

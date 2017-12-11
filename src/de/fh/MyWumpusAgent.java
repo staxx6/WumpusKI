@@ -3,6 +3,7 @@ package de.fh;
 import de.fh.agent.WumpusHunterAgent;
 import de.fh.util.Vector2;
 import de.fh.wumpus.HunterPercept;
+import de.fh.wumpus.WumpusStartInfo;
 import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
 
@@ -63,7 +64,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
          if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
         	Vector2 startPos = new Vector2(100, 100);
      		this.hunterPos = startPos; 
-     		this.stateUpdater = new StateUpdater(this.currView, this.percept, startPos);
+     		this.stateUpdater = new StateUpdater(this.currView, this.percept, startPos, this.stenchRadar, this.startInfo);
          }
 
          if(actionEffect == HunterActionEffect.GAME_OVER) {
@@ -118,13 +119,12 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		
 		// --------------------------------------------------------------
 		
+		stenchRadar = this.percept.getWumpusStenchRadar();
 		this.stateUpdater.update(hunterPos);
 		
 		// --------------------------------------------------------------
 		
 		/*
-		//Beispiel:
-		stenchRadar = this.percept.getWumpusStenchRadar();
 
 		//Gebe alle riechbaren Wumpis aus
 		System.out.println("WumpusID: Intensitaet");
