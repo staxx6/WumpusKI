@@ -86,7 +86,7 @@ public class Node {
 		return breeze;
 	}
 
-	public void setBreeze(boolean breeze) {
+	public void setBreeze(final boolean breeze) {
 		this.breeze = breeze;
 	}
 

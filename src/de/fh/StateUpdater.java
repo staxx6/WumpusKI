@@ -20,15 +20,15 @@ public class StateUpdater {
 	
 	private List<List<Node>> view;
 	private Hashtable<Integer, Integer> stenchRadar;
-	private HunterPercept percept;
+//	private HunterPercept percept;
 
 	
-	public StateUpdater(final List<List<Node>> view, final HunterPercept percept,
+	public StateUpdater(final List<List<Node>> view,
 			final Vector2 startPos, final Hashtable<Integer, Integer> stenchRadar, 
 				final WumpusStartInfo startInfo) {
 		this.startInfo = startInfo;
 		this.view = view;
-		this.percept = percept;
+//		this.percept = percept;
 		this.stenchRadar = stenchRadar;
 		
 		this.stenchRadius = startInfo.getStenchDistance();
@@ -45,31 +45,33 @@ public class StateUpdater {
  		}
 	}
 	
-	public void update(final Vector2 pos) {
-		System.out.println("wall around x: " + pos.getX() + " y: " + pos.getY());
-		if(this.percept.isBump()) setPossibleTypeAround(pos, TileType.WALL);
-		if(this.percept.isBreeze()) {
+	public void update(final Vector2 pos, final HunterPercept percept) {
+		// If nothing - have to be empty or some action happens like hit by wumpus
+		// First statement:  EMPTY as long it's not overriden 
+		getNode(pos).setTileType(TileType.EMPTY);
+		
+		if(percept.isBump()) setPossibleTypeAround(pos, TileType.WALL);
+		if(percept.isBreeze()) {
 			setPossibleTypeAround(pos, TileType.PIT);
 			getNode(pos).setBreeze(true);
 		}
 		
 		//TODO: Not tested
-		/*
 		if(this.stenchRadar.isEmpty()) {
 			for(List<Node> l : this.view) {
 				for(Node n : l) {
 					if(n == null) continue;
 					//Manhatten distance
-					int distance =  Math.abs(hunterPos.getX() - n.getPosX()) 
-			        		+ Math.abs(hunterPos.getY() - n.getPosY());
+					int distance =  Math.abs(pos.getX() - n.getPosX()) 
+			        		+ Math.abs(pos.getY() - n.getPosY());
 					if(distance <= startInfo.getStenchDistance())
 						n.removeAllWumpusIds();
 				}
 			}
 		} else {
 			// TODO: Dont know if right key<->Value
-			int hPosX = this.hunterPos.getX();
-			int hPosY = this.hunterPos.getY();
+			int hPosX = pos.getX();
+			int hPosY = pos.getY();
 			for(Map.Entry<Integer, Integer> i : stenchRadar.entrySet()) {
 				for(int y = hPosY - this.stenchRadius; y < hPosY + this.stenchRadius; y++) {
 					for(int x = hPosX - this.stenchRadius; x  < hPosX + this.stenchRadius; x++) {
@@ -83,11 +85,9 @@ public class StateUpdater {
 				}
 			}
 		}
-		 */
 		
-		// If nothing - have to be empty or some action happens like hit by wumpus
-		getNode(pos).setTileType(TileType.EMPTY);
-		System.out.println(toStringKnown());
+		if(percept.isGlitter()) getNode(pos).setTileType(TileType.GOLD);
+		System.out.println(toStringPossible());
 	}
 	
 	private void setPossibleTypeAround(final Vector2 pos, final TileType type) {
@@ -124,6 +124,18 @@ public class StateUpdater {
 		return n;
 	}
 	
+	/*
+	 * Reaturns a String with known tiles as a matrix
+	 * Null tiles are shwon with a small "e"
+	 *  E = Empty
+	 *  H = Hunter
+	 *  W = Wall
+	 *  G = Gold
+	 *  X = Wumpus
+	 *  P = Pit
+	 *  B = Breeze
+	 *  U = Unkown (unproven tiles)
+	 */
 	public String toStringKnown() {
 		String s = "------------ Current View - Known --------------\n";
 		s += "-  ";
@@ -149,30 +161,52 @@ public class StateUpdater {
 		return s;
 	}
 	
-	// TODO: fix like toStringKnown
+	/*
+	 * Reaturns a String with possible and known tiles as a matrix
+	 * e.g "(WPX)" (They are the UNKNOWN tiles)
+	 * Null tiles are shwon with a small "e"
+	 *  E = Empty
+	 *  H = Hunter
+	 *  W = Wall
+	 *  G = Gold
+	 *  X = Wumpus
+	 *  P = Pit
+	 *  B = Breeze
+	 */
 	public String toStringPossible() {
 		String s = "------------ Current View - Possible --------------\n";
-		for(List<Node> list : this.view) {
-			for(Node n : list) {
-				if(n == null) {
-					s += "e ";
-					continue;
-				}
+		s += "-  ";
+		for(int i = 0; i < this.view.size(); i++) {
+			s += i + " ";
+		}
+		for(int y = 0; y < this.view.size(); y++) {
+			s += y + ". ";
+			for(int x = 0; x < this.view.size(); x++) {
+				Node n = this.view.get(y).get(x);
 				
-				if(n.getTileType() == TileType.UNKNOWN) {
-					for(TileType t : n.getPossibleTypes()) {
+				if(n != null) {
+					if(n.getTileType() == TileType.UNKNOWN) {
 						s += "(";
-						if(t == TileType.WUMPUS) {
-							for(Integer i : n.getWumpusIds())
-								s += i + ",";
-						} else {
-							s += t.getSymbol();
+						for(TileType t : n.getPossibleTypes()) {
+							if(t == null) break; //TODO need it by foreach?
+							if(t == TileType.WUMPUS) {
+								for(Integer i : n.getWumpusIds())
+									s += i + ",";
+							} else {
+								s += t.getSymbol();
+							}
 						}
-						s += ") ";
+						s += ")";
+					} else {
+						s += " " + n.getTileType().getSymbol() + " ";
 					}
+					if(n.isBreeze()) {
+						s = s.substring(0, s.length() - 1);
+						s += "B";
+					}
+				} else {
+					s += "e  ";
 				}
-				
-				s += n.getTileType().getSymbol() + " ";
 			}
 			s += "\n";
 		}

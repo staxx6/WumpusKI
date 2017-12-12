@@ -62,7 +62,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	Vector2 startPos = new Vector2(18, 18);
      		this.hunterPos = new Vector2(startPos.getX(), startPos.getY()); 
      		stenchRadar = percept.getWumpusStenchRadar();
-     		this.stateUpdater = new StateUpdater(this.currView, this.percept, 
+     		this.stateUpdater = new StateUpdater(this.currView, 
      				startPos, this.stenchRadar, this.startInfo);
          }
 
@@ -79,6 +79,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
          }
 
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
+        	 
+        	 // Update Hunter postition
         	 switch(startInfo.getAgentDirection()) {
         	 	case NORTH:
         	 		hunterPos.setY(hunterPos.getY() - 1);
@@ -130,7 +132,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		// --------------------------------------------------------------
 		
 		stenchRadar = this.percept.getWumpusStenchRadar();
-		this.stateUpdater.update(hunterPos);
+		this.stateUpdater.update(hunterPos, percept);
 		
 		// --------------------------------------------------------------
 		
