@@ -1,17 +1,14 @@
 package de.fh;
 
 import de.fh.agent.WumpusHunterAgent;
+import de.fh.game.Entity.Direction;
 import de.fh.util.Vector2;
 import de.fh.wumpus.HunterPercept;
-import de.fh.wumpus.WumpusStartInfo;
 import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
 
-import java.awt.SystemColor;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 
 /*
  * DIESE KLASSE VERÄNDERN SIE BITTE NUR AN DEN GEKENNZEICHNETEN STELLEN
@@ -62,10 +59,11 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 //         Aktuelle Reaktion des Server auf die letzte übermittelte Action.
 
          if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
-        	Vector2 startPos = new Vector2(100, 100);
-     		this.hunterPos = startPos; 
+        	Vector2 startPos = new Vector2(18, 18);
+     		this.hunterPos = new Vector2(startPos.getX(), startPos.getY()); 
      		stenchRadar = percept.getWumpusStenchRadar();
-     		this.stateUpdater = new StateUpdater(this.currView, this.percept, startPos, this.stenchRadar, this.startInfo);
+     		this.stateUpdater = new StateUpdater(this.currView, this.percept, 
+     				startPos, this.stenchRadar, this.startInfo);
          }
 
          if(actionEffect == HunterActionEffect.GAME_OVER) {
@@ -80,11 +78,22 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 System.out.println("DEBUG: Bumped into hunter!");
          }
 
-         /*
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
-        	 //Nothing
+        	 switch(startInfo.getAgentDirection()) {
+        	 	case NORTH:
+        	 		hunterPos.setY(hunterPos.getY() - 1);
+        	 		break;
+        	 	case EAST:
+        	 		hunterPos.setX(hunterPos.getX() + 1);
+        	 		break;
+        	 	case SOUTH:
+        	 		hunterPos.setY(hunterPos.getY() + 1);
+        	 		break;
+        	 	case WEST:
+        	 		hunterPos.setX(hunterPos.getX() - 1);
+        	 		break;
+        	 }
          }
-         */
 
          if(actionEffect == HunterActionEffect.GOLD_FOUND) {
         	 System.out.println("DEBUG: Collected gold!");

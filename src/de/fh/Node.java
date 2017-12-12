@@ -78,7 +78,7 @@ public class Node {
 	
 	public void addPossibleType(final TileType type) {
 		if(this.possibleTypes == null) this.possibleTypes = new ArrayList<>();
-		if(this.type == TileType.UNKNOWN)
+		if(this.type == TileType.UNKNOWN) 
 			this.possibleTypes.add(type);
 	}
 
@@ -105,4 +105,19 @@ public class Node {
 	public void removeWumpusId(final int id) {
 		this.wumpusIds.remove(id);
 	}
+	
+	public void removeAllWumpusIds() {
+		if(this.wumpusIds != null)
+			this.wumpusIds.clear();
+	}
 }
+
+
+
+
+
+
+
+
+
+
