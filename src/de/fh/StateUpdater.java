@@ -10,7 +10,9 @@ import de.fh.wumpus.HunterPercept;
 import de.fh.wumpus.WumpusStartInfo;
 
 /*
- * TODO No growing List! IndexOutOfBoundsException possible by getNode!!! 
+ * TODO: No growing List! IndexOutOfBoundsException possible by getNode!!! 
+ * TODO: Rename to "State"
+ * TODO: Fix wumpus radar
  */
 
 public class StateUpdater {
@@ -19,17 +21,16 @@ public class StateUpdater {
 	private int stenchRadius;
 	
 	private List<List<Node>> view;
-	private Hashtable<Integer, Integer> stenchRadar;
+//	private Hashtable<Integer, Integer> stenchRadar;
 //	private HunterPercept percept;
 
-	
 	public StateUpdater(final List<List<Node>> view,
 			final Vector2 startPos, final Hashtable<Integer, Integer> stenchRadar, 
 				final WumpusStartInfo startInfo) {
 		this.startInfo = startInfo;
 		this.view = view;
 //		this.percept = percept;
-		this.stenchRadar = stenchRadar;
+//		this.stenchRadar = stenchRadar;
 		
 		this.stenchRadius = startInfo.getStenchDistance();
 		
@@ -56,8 +57,10 @@ public class StateUpdater {
 			getNode(pos).setBreeze(true);
 		}
 		
+		/*
 		//TODO: Not tested
-		if(this.stenchRadar.isEmpty()) {
+		if(percept.getWumpusStenchRadar().isEmpty()) {
+			System.out.println("EMPTY");
 			for(List<Node> l : this.view) {
 				for(Node n : l) {
 					if(n == null) continue;
@@ -65,14 +68,15 @@ public class StateUpdater {
 					int distance =  Math.abs(pos.getX() - n.getPosX()) 
 			        		+ Math.abs(pos.getY() - n.getPosY());
 					if(distance <= startInfo.getStenchDistance())
+						//TODO: It removes something it shouldn't 
 						n.removeAllWumpusIds();
 				}
 			}
 		} else {
-			// TODO: Dont know if right key<->Value
+			// TODO: Dont know if right key<->Value // key=id
 			int hPosX = pos.getX();
 			int hPosY = pos.getY();
-			for(Map.Entry<Integer, Integer> i : stenchRadar.entrySet()) {
+			for(Map.Entry<Integer, Integer> i : percept.getWumpusStenchRadar().entrySet()) {
 				for(int y = hPosY - this.stenchRadius; y < hPosY + this.stenchRadius; y++) {
 					for(int x = hPosX - this.stenchRadius; x  < hPosX + this.stenchRadius; x++) {
 						Node n = getNode(x, y);
@@ -85,9 +89,9 @@ public class StateUpdater {
 				}
 			}
 		}
-		
+		*/
 		if(percept.isGlitter()) getNode(pos).setTileType(TileType.GOLD);
-		System.out.println(toStringPossible());
+		System.out.println(toStringKnown());
 	}
 	
 	private void setPossibleTypeAround(final Vector2 pos, final TileType type) {
@@ -106,7 +110,7 @@ public class StateUpdater {
 		//TODO: add cost/ heuristic values here? 
 	}
 	
-	private Node getNode(final int x, final int y) {
+	public Node getNode(final int x, final int y) {
 		Node n = this.view.get(y).get(x);
 		if(n == null) {
 			n = new Node(TileType.UNKNOWN, x, y);
@@ -115,7 +119,7 @@ public class StateUpdater {
 		return n;
 	}
 	
-	private Node getNode(final Vector2 pos) {
+	public Node getNode(final Vector2 pos) {
 		Node n = this.view.get(pos.getY()).get(pos.getX());
 		if(n == null) {
 			n = new Node(TileType.UNKNOWN, pos);
@@ -177,13 +181,13 @@ public class StateUpdater {
 		String s = "------------ Current View - Possible --------------\n";
 		s += "-  ";
 		for(int i = 0; i < this.view.size(); i++) {
-			s += i + " ";
+			s += i + "  ";
 		}
+		s += "\n";
 		for(int y = 0; y < this.view.size(); y++) {
 			s += y + ". ";
 			for(int x = 0; x < this.view.size(); x++) {
 				Node n = this.view.get(y).get(x);
-				
 				if(n != null) {
 					if(n.getTileType() == TileType.UNKNOWN) {
 						s += "(";

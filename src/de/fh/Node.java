@@ -8,13 +8,13 @@ import java.util.Set;
 import de.fh.util.Vector2;
 
 /*
- * TODO: Naming fail?
+ * TODO: Rename to Tile
  */
 
 public class Node {
 	private TileType type;
 	private Vector2 pos;
-	private List<TileType> possibleTypes;
+	private Set<TileType> possibleTypes;
 	private boolean breeze = false;
 	private Set<Integer> wumpusIds;
 	
@@ -65,11 +65,11 @@ public class Node {
 		return this.pos.getY();
 	}
 
-	public List<TileType> getPossibleTypes() {
+	public Set<TileType> getPossibleTypes() {
 		return possibleTypes;
 	}
 
-	public void setPossibleTypes(List<TileType> possibleTypes) {
+	public void setPossibleTypes(Set<TileType> possibleTypes) {
 		if(this.type == TileType.UNKNOWN)
 			this.possibleTypes = possibleTypes;
 		else
@@ -77,7 +77,7 @@ public class Node {
 	}
 	
 	public void addPossibleType(final TileType type) {
-		if(this.possibleTypes == null) this.possibleTypes = new ArrayList<>();
+		if(this.possibleTypes == null) this.possibleTypes = new HashSet<>();
 		if(this.type == TileType.UNKNOWN) 
 			this.possibleTypes.add(type);
 	}
