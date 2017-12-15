@@ -57,13 +57,14 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		this.percept = (HunterPercept) percept;
 
 		if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
-			 // 
+			/*
 			Vector2 startPos = new Vector2(18, 18);
 			this.hunterPos = new Vector2(startPos.getX(), startPos.getY());
 			this.hunterDir = startInfo.getAgentDirection();
 			stenchRadar = percept.getWumpusStenchRadar();
 			this.state = new State(this.currView, 
 					startPos, this.stenchRadar, this.startInfo);
+			*/
 		}
 
         if(actionEffect == HunterActionEffect.GAME_OVER) {
@@ -73,6 +74,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         // Set tile type to wall at bump location
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
         	System.out.println("DEBUG: Bumped into wall!");
+        	/*
         	Tile n = null;
         	switch(this.hunterDir) {
         		case NORTH:
@@ -95,6 +97,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         			System.out.println("ERROR: Direction dosn't exist!");
         	}
         	n.setTileType(TileType.WALL);
+        	*/
         }
 
          if(actionEffect == HunterActionEffect.BUMPED_INTO_HUNTER) {
@@ -106,7 +109,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
         	 System.out.println("DEBUG: Movement successful");
-        	 
+        	 /*
         	// Update Hunter postition
         	 if(!this.lastMovIsATurn) {
         		 switch(this.hunterDir) {
@@ -131,6 +134,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         			 break;
         		 }
         	 }
+        	 */
          }
 
          if(actionEffect == HunterActionEffect.GOLD_FOUND) {
@@ -145,11 +149,12 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 System.out.println("DEBUG: No more arrows!");
          }
 		
+         /*
 		stenchRadar = this.percept.getWumpusStenchRadar();
 		
 		System.out.println("update now");
 		this.state.update(hunterPos, percept);
-		
+		*/
 		this.actionEffect = actionEffect;
 		System.out.println("");
 	}
@@ -168,7 +173,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	 */
 	@Override
 	public HunterAction action() {
-		
+		/*
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
         	// Turn hunters direction
 			 this.nextAction = HunterAction.TURN_RIGHT;    
@@ -211,6 +216,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 				System.out.println("Set the var to: false");
 			}
         }
+		 */
 		
 		/*
 		 * TODO: 1. Go to EAST till wall and then go down... With this we have
@@ -226,7 +232,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		 *		 - Go away if stench to strong
 		 *			-> but good shoot spot 
 		 */
-
+		nextAction = HunterAction.GO_FORWARD;
 		
 		System.out.println("--- END STEP (action now) ---");
 		return nextAction;
