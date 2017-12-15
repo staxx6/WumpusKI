@@ -27,6 +27,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private Vector2 hunterPos;
 	private Direction hunterDir;
 	
+	private boolean lastMovIsATurn = false;
+	
 	public static void main(String[] args) {
 
 		MyWumpusAgent agent = new MyWumpusAgent("");
@@ -68,11 +70,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	System.out.println("DEBUG: Game Over!");         	
         }
 
-        // Here must be the wall so set it in state
+        // Set tile type to wall at bump location
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
         	System.out.println("DEBUG: Bumped into wall!");
         	Tile n = null;
-        	// Only for debug - moves in circles
         	switch(this.hunterDir) {
         		case NORTH:
         			n = this.state.getTile(
@@ -99,6 +100,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
          if(actionEffect == HunterActionEffect.BUMPED_INTO_HUNTER) {
         	 //TODO: set hunter to pos
         	 //or other hunter bumped to this hunter?
+        	 //TODO: Tile need bool if it is a hunter
         	 System.out.println("DEBUG: Bumped into hunter!");
          }
 
@@ -106,27 +108,29 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 System.out.println("DEBUG: Movement successful");
         	 
         	// Update Hunter postition
- 			switch(this.hunterDir) {
- 				case NORTH:
- 	       	 		this.hunterPos.setY(this.hunterPos.getY() - 1);
- 	       	 		System.out.println("pos to n");
- 	       	 		break;
- 	       	 	case EAST:
- 	       	 		this.hunterPos.setX(this.hunterPos.getX() + 1);
- 	       	 		System.out.println("pos to e");
- 	       	 		break;
- 	       	 	case SOUTH:
- 	       	 		this.hunterPos.setY(this.hunterPos.getY() + 1);
- 	       	 		System.out.println("pos to s");
- 	       	 		break;
- 	       	 	case WEST:
- 	       	 		this.hunterPos.setX(this.hunterPos.getX() - 1);
- 	       	 		System.out.println("pos to w");
- 	       	 		break;
- 	       	 	default:
- 	     	 		System.out.println("ERROR: Direction dosn't exist?");
- 	     	 		break;
-        		}
+        	 if(!this.lastMovIsATurn) {
+        		 switch(this.hunterDir) {
+        		 case NORTH:
+        			 this.hunterPos.setY(this.hunterPos.getY() - 1);
+        			 System.out.println("pos to n");
+        			 break;
+        		 case EAST:
+        			 this.hunterPos.setX(this.hunterPos.getX() + 1);
+        			 System.out.println("pos to e");
+        			 break;
+        		 case SOUTH:
+        			 this.hunterPos.setY(this.hunterPos.getY() + 1);
+        			 System.out.println("pos to s");
+        			 break;
+        		 case WEST:
+        			 this.hunterPos.setX(this.hunterPos.getX() - 1);
+        			 System.out.println("pos to w");
+        			 break;
+        		 default:
+        			 System.out.println("ERROR: Direction dosn't exist?");
+        			 break;
+        		 }
+        	 }
          }
 
          if(actionEffect == HunterActionEffect.GOLD_FOUND) {
@@ -166,6 +170,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	public HunterAction action() {
 		
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
+        	// Turn hunters direction
 			 this.nextAction = HunterAction.TURN_RIGHT;    
 			 System.out.println("act set Turn");
 			 switch(this.hunterDir) {
@@ -189,13 +194,22 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			 		System.out.println("ERROR: Direction dosn't exist?");
 			     	 break;
 			 }
-        } else {
-        	this.nextAction = HunterAction.GO_FORWARD;
-        	System.out.println("act set forward");
+			 this.lastMovIsATurn = true;
+			 System.out.println("Set the var to: true");
+        } 
+        else {
+//        	this.nextAction = HunterAction.GO_FORWARD;
+//        	System.out.println("act set forward");
         }
 		
 		if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
-			
+			if(!this.lastMovIsATurn) {
+				this.nextAction = HunterAction.GO_FORWARD;
+				System.out.println("act set forward");
+			} else {
+				this.lastMovIsATurn = false;
+				System.out.println("Set the var to: false");
+			}
         }
 		
 		/*
