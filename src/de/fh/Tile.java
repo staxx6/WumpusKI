@@ -11,19 +11,19 @@ import de.fh.util.Vector2;
  * TODO: Rename to Tile
  */
 
-public class Node {
+public class Tile {
 	private TileType type;
 	private Vector2 pos;
 	private Set<TileType> possibleTypes;
 	private boolean breeze = false;
 	private Set<Integer> wumpusIds;
 	
-	public Node(final TileType type, final Vector2 pos) {
+	public Tile(final TileType type, final Vector2 pos) {
 		this.type = type;
 		this.pos = pos;
 	}
 	
-	public Node(final TileType type, final int x, final int y) {
+	public Tile(final TileType type, final int x, final int y) {
 		this.type = type;
 		this.pos = new Vector2(x, y);
 	}

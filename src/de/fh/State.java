@@ -15,16 +15,16 @@ import de.fh.wumpus.WumpusStartInfo;
  * TODO: Fix wumpus radar
  */
 
-public class StateUpdater {
+public class State {
 	
 	private WumpusStartInfo startInfo;
 	private int stenchRadius;
 	
-	private List<List<Node>> view;
+	private List<List<Tile>> view;
 //	private Hashtable<Integer, Integer> stenchRadar;
 //	private HunterPercept percept;
 
-	public StateUpdater(final List<List<Node>> view,
+	public State(final List<List<Tile>> view,
 			final Vector2 startPos, final Hashtable<Integer, Integer> stenchRadar, 
 				final WumpusStartInfo startInfo) {
 		this.startInfo = startInfo;
@@ -49,12 +49,12 @@ public class StateUpdater {
 	public void update(final Vector2 pos, final HunterPercept percept) {
 		// If nothing - have to be empty or some action happens like hit by wumpus
 		// First statement:  EMPTY as long it's not overriden 
-		getNode(pos).setTileType(TileType.EMPTY);
+		getTile(pos).setTileType(TileType.EMPTY);
 		
 		if(percept.isBump()) setPossibleTypeAround(pos, TileType.WALL);
 		if(percept.isBreeze()) {
 			setPossibleTypeAround(pos, TileType.PIT);
-			getNode(pos).setBreeze(true);
+			getTile(pos).setBreeze(true);
 		}
 		
 		/*
@@ -90,7 +90,7 @@ public class StateUpdater {
 			}
 		}
 		*/
-		if(percept.isGlitter()) getNode(pos).setTileType(TileType.GOLD);
+		if(percept.isGlitter()) getTile(pos).setTileType(TileType.GOLD);
 		System.out.println(toStringKnown());
 	}
 	
@@ -99,30 +99,30 @@ public class StateUpdater {
 		int y = pos.getY();
 		
 		//North
-		getNode(x, (y - 1)).addPossibleType(type);
+		getTile(x, (y - 1)).addPossibleType(type);
 		//East
-		getNode((x + 1), y).addPossibleType(type);
+		getTile((x + 1), y).addPossibleType(type);
 		//South
-		getNode(x, (y + 1)).addPossibleType(type);
+		getTile(x, (y + 1)).addPossibleType(type);
 		//West
-		getNode((x - 1), y).addPossibleType(type);
+		getTile((x - 1), y).addPossibleType(type);
 		
 		//TODO: add cost/ heuristic values here? 
 	}
 	
-	public Node getNode(final int x, final int y) {
-		Node n = this.view.get(y).get(x);
+	public Tile getTile(final int x, final int y) {
+		Tile n = this.view.get(y).get(x);
 		if(n == null) {
-			n = new Node(TileType.UNKNOWN, x, y);
+			n = new Tile(TileType.UNKNOWN, x, y);
 			this.view.get(y).set(x, n);
 		}
 		return n;
 	}
 	
-	public Node getNode(final Vector2 pos) {
-		Node n = this.view.get(pos.getY()).get(pos.getX());
+	public Tile getTile(final Vector2 pos) {
+		Tile n = this.view.get(pos.getY()).get(pos.getX());
 		if(n == null) {
-			n = new Node(TileType.UNKNOWN, pos);
+			n = new Tile(TileType.UNKNOWN, pos);
 			this.view.get(pos.getY()).set(pos.getX(), n);
 		}
 		return n;
@@ -150,7 +150,7 @@ public class StateUpdater {
 		for(int y = 0; y < this.view.size(); y++) {
 			s += y + ". ";
 			for(int x = 0; x < this.view.size(); x++) {
-				Node n = this.view.get(y).get(x);
+				Tile n = this.view.get(y).get(x);
 				if(n != null) {
 					s += n.getTileType().getSymbol();
 					if(n.isBreeze()) s += "B";
@@ -187,7 +187,7 @@ public class StateUpdater {
 		for(int y = 0; y < this.view.size(); y++) {
 			s += y + ". ";
 			for(int x = 0; x < this.view.size(); x++) {
-				Node n = this.view.get(y).get(x);
+				Tile n = this.view.get(y).get(x);
 				if(n != null) {
 					if(n.getTileType() == TileType.UNKNOWN) {
 						s += "(";

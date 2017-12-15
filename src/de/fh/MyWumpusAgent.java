@@ -22,8 +22,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private HunterActionEffect actionEffect;
 	private Hashtable<Integer, Integer> stenchRadar;
 	
-	private List<List<Node>> currView;	
-	private StateUpdater stateUpdater;
+	private List<List<Tile>> currView;	
+	private State state;
 	private Vector2 hunterPos;
 	private Direction hunterDir;
 	
@@ -60,7 +60,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.hunterPos = new Vector2(startPos.getX(), startPos.getY());
 			this.hunterDir = startInfo.getAgentDirection();
 			stenchRadar = percept.getWumpusStenchRadar();
-			this.stateUpdater = new StateUpdater(this.currView, 
+			this.state = new State(this.currView, 
 					startPos, this.stenchRadar, this.startInfo);
 		}
 
@@ -71,23 +71,23 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         // Here must be the wall so set it in state
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
         	System.out.println("DEBUG: Bumped into wall!");
-        	Node n = null;
+        	Tile n = null;
         	// Only for debug - moves in circles
         	switch(this.hunterDir) {
         		case NORTH:
-        			n = this.stateUpdater.getNode(
+        			n = this.state.getTile(
         					this.hunterPos.getX(), this.hunterPos.getY() - 1);
         			break;
         		case EAST:
-        			n = this.stateUpdater.getNode(
+        			n = this.state.getTile(
         					this.hunterPos.getX() + 1, this.hunterPos.getY());
         			break;
         		case SOUTH:
-        			n = this.stateUpdater.getNode(
+        			n = this.state.getTile(
         					this.hunterPos.getX(), this.hunterPos.getY() + 1);
         			break;
         		case WEST:
-        			n = this.stateUpdater.getNode(
+        			n = this.state.getTile(
         					this.hunterPos.getX() - 1, this.hunterPos.getY());
         			break;
         		default:
@@ -104,6 +104,29 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
         	 System.out.println("DEBUG: Movement successful");
+        	 
+        	// Update Hunter postition
+ 			switch(this.hunterDir) {
+ 				case NORTH:
+ 	       	 		this.hunterPos.setY(this.hunterPos.getY() - 1);
+ 	       	 		System.out.println("pos to n");
+ 	       	 		break;
+ 	       	 	case EAST:
+ 	       	 		this.hunterPos.setX(this.hunterPos.getX() + 1);
+ 	       	 		System.out.println("pos to e");
+ 	       	 		break;
+ 	       	 	case SOUTH:
+ 	       	 		this.hunterPos.setY(this.hunterPos.getY() + 1);
+ 	       	 		System.out.println("pos to s");
+ 	       	 		break;
+ 	       	 	case WEST:
+ 	       	 		this.hunterPos.setX(this.hunterPos.getX() - 1);
+ 	       	 		System.out.println("pos to w");
+ 	       	 		break;
+ 	       	 	default:
+ 	     	 		System.out.println("ERROR: Direction dosn't exist?");
+ 	     	 		break;
+        		}
          }
 
          if(actionEffect == HunterActionEffect.GOLD_FOUND) {
@@ -121,7 +144,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		stenchRadar = this.percept.getWumpusStenchRadar();
 		
 		System.out.println("update now");
-		this.stateUpdater.update(hunterPos, percept);
+		this.state.update(hunterPos, percept);
 		
 		this.actionEffect = actionEffect;
 		System.out.println("");
@@ -172,28 +195,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         }
 		
 		if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
-			// Update Hunter postition
-			switch(this.hunterDir) {
-				case NORTH:
-	       	 		this.hunterPos.setY(this.hunterPos.getY() - 1);
-	       	 		System.out.println("pos to n");
-	       	 		break;
-	       	 	case EAST:
-	       	 		this.hunterPos.setX(this.hunterPos.getX() + 1);
-	       	 		System.out.println("pos to e");
-	       	 		break;
-	       	 	case SOUTH:
-	       	 		this.hunterPos.setY(this.hunterPos.getY() + 1);
-	       	 		System.out.println("pos to s");
-	       	 		break;
-	       	 	case WEST:
-	       	 		this.hunterPos.setX(this.hunterPos.getX() - 1);
-	       	 		System.out.println("pos to w");
-	       	 		break;
-	       	 	default:
-	     	 		System.out.println("ERROR: Direction dosn't exist?");
-	     	 		break;
-       		}
+			
         }
 		
 		/*
