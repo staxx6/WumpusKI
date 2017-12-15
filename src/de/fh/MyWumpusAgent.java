@@ -27,6 +27,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private Vector2 hunterPos;
 	private Direction hunterDir;
 	
+	private boolean wasTurn;
+	
 	public static void main(String[] args) {
 
 		MyWumpusAgent agent = new MyWumpusAgent("");
@@ -59,6 +61,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			Vector2 startPos = new Vector2(18, 18);
 			this.hunterPos = new Vector2(startPos.getX(), startPos.getY());
 			this.hunterDir = startInfo.getAgentDirection();
+			this.wasTurn = false;
 			stenchRadar = percept.getWumpusStenchRadar();
 			this.state = new State(this.currView, 
 					startPos, this.stenchRadar, this.startInfo);
@@ -105,28 +108,35 @@ public class MyWumpusAgent extends WumpusHunterAgent {
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
         	 System.out.println("DEBUG: Movement successful");
         	 
-        	// Update Hunter postition
- 			switch(this.hunterDir) {
- 				case NORTH:
- 	       	 		this.hunterPos.setY(this.hunterPos.getY() - 1);
- 	       	 		System.out.println("pos to n");
- 	       	 		break;
- 	       	 	case EAST:
- 	       	 		this.hunterPos.setX(this.hunterPos.getX() + 1);
- 	       	 		System.out.println("pos to e");
- 	       	 		break;
- 	       	 	case SOUTH:
- 	       	 		this.hunterPos.setY(this.hunterPos.getY() + 1);
- 	       	 		System.out.println("pos to s");
- 	       	 		break;
- 	       	 	case WEST:
- 	       	 		this.hunterPos.setX(this.hunterPos.getX() - 1);
- 	       	 		System.out.println("pos to w");
- 	       	 		break;
- 	       	 	default:
- 	     	 		System.out.println("ERROR: Direction dosn't exist?");
- 	     	 		break;
-        		}
+        	 // Ignore pos change if last update was just a turn
+        	 //TODO: Wumpus moves\rumbles  here too?
+        	 if(!this.wasTurn) {
+        		 // Update Hunter postition
+        		 switch(this.hunterDir) {
+        		 case NORTH:
+        			 this.hunterPos.setY(this.hunterPos.getY() - 1);
+        			 System.out.println("pos to n");
+        			 break;
+        		 case EAST:
+        			 this.hunterPos.setX(this.hunterPos.getX() + 1);
+        			 System.out.println("pos to e");
+        			 break;
+        		 case SOUTH:
+        			 this.hunterPos.setY(this.hunterPos.getY() + 1);
+        			 System.out.println("pos to s");
+        			 break;
+        		 case WEST:
+        			 this.hunterPos.setX(this.hunterPos.getX() - 1);
+        			 System.out.println("pos to w");
+        			 break;
+        		 default:
+        			 System.out.println("ERROR: Direction dosn't exist?");
+        			 break;
+        		 }
+        	 } else {
+        		 // reset the turn bool
+        		 this.wasTurn = false;
+        	 }
          }
 
          if(actionEffect == HunterActionEffect.GOLD_FOUND) {
@@ -167,6 +177,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
 			 this.nextAction = HunterAction.TURN_RIGHT;    
+			 this.wasTurn = true;
 			 System.out.println("act set Turn");
 			 switch(this.hunterDir) {
 			 	case NORTH:
