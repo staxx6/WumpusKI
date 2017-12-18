@@ -21,16 +21,11 @@ public class State {
 	private int stenchRadius;
 	
 	private List<List<Tile>> view;
-//	private Hashtable<Integer, Integer> stenchRadar;
-//	private HunterPercept percept;
 
 	public State(final List<List<Tile>> view,
-			final Vector2 startPos, final Hashtable<Integer, Integer> stenchRadar, 
-				final WumpusStartInfo startInfo) {
+			final Vector2 startPos, final WumpusStartInfo startInfo) {
 		this.startInfo = startInfo;
 		this.view = view;
-//		this.percept = percept;
-//		this.stenchRadar = stenchRadar;
 		
 		this.stenchRadius = startInfo.getStenchDistance();
 		
@@ -46,6 +41,20 @@ public class State {
  		}
 	}
 	
+	/*
+	 * Update the state. It takes the percept from the agent 
+	 * and the methode create a current view of the world.
+	 *  
+	 * If we can be sure there is something (e.g. wall) we set 
+	 * the tile type to this. Otherweise we add the tile a
+	 * possible of a type.  
+	 * 
+	 * @param pos hunter position
+	 * @param percept current percept from the hunter agent
+	 *
+	 *
+	 *TODO fix NPE
+	 */
 	public void update(final Vector2 pos, final HunterPercept percept) {
 		// If nothing - have to be empty or some action happens like hit by wumpus
 		// First statement:  EMPTY as long it's not overriden 
@@ -57,18 +66,17 @@ public class State {
 			getTile(pos).setBreeze(true);
 		}
 		
-		/*
 		//TODO: Not tested
 		if(percept.getWumpusStenchRadar().isEmpty()) {
 			System.out.println("EMPTY");
-			for(List<Node> l : this.view) {
-				for(Node n : l) {
+			for(List<Tile> l : this.view) {
+				for(Tile n : l) {
 					if(n == null) continue;
 					//Manhatten distance
 					int distance =  Math.abs(pos.getX() - n.getPosX()) 
 			        		+ Math.abs(pos.getY() - n.getPosY());
 					if(distance <= startInfo.getStenchDistance())
-						//TODO: It removes something it shouldn't 
+						//TODO: It removes something it shouldn't  NOPE?
 						n.removeAllWumpusIds();
 				}
 			}
@@ -76,22 +84,20 @@ public class State {
 			// TODO: Dont know if right key<->Value // key=id
 			int hPosX = pos.getX();
 			int hPosY = pos.getY();
-			for(Map.Entry<Integer, Integer> i : percept.getWumpusStenchRadar().entrySet()) {
+			for(Map.Entry<Integer, Integer> id : percept.getWumpusStenchRadar().entrySet()) {
 				for(int y = hPosY - this.stenchRadius; y < hPosY + this.stenchRadius; y++) {
 					for(int x = hPosX - this.stenchRadius; x  < hPosX + this.stenchRadius; x++) {
-						Node n = getNode(x, y);
+						Tile n = getTile(x, y);
 						int distance =  Math.abs(hPosX - n.getPosX()) 
 				        		+ Math.abs(hPosY - n.getPosY());
-						if(distance == i.getValue()) {
-							n.addWumpusId(i.getKey());
+						if(distance == id.getValue()) {
+							n.addWumpusId(id.getKey());
 						}
 					}
 				}
 			}
 		}
-		*/
 		if(percept.isGlitter()) getTile(pos).setTileType(TileType.GOLD);
-		System.out.println(toStringKnown());
 	}
 	
 	private void setPossibleTypeAround(final Vector2 pos, final TileType type) {
