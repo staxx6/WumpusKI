@@ -1,11 +1,8 @@
 package de.fh;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-
-import com.sun.swing.internal.plaf.metal.resources.metal;
 
 import de.fh.util.Vector2;
 import de.fh.wumpus.HunterPercept;
