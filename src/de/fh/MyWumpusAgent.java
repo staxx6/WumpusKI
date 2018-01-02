@@ -63,7 +63,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.hunterDir = startInfo.getAgentDirection();
 			this.wasTurn = false;
 			stenchRadar = percept.getWumpusStenchRadar();
-			this.state = new State(this.currView, startPos, this.startInfo);
+			this.state = new State(this.currView, startPos, this.startInfo, this.hunterPos);
 		}
 
         if(actionEffect == HunterActionEffect.GAME_OVER) {
