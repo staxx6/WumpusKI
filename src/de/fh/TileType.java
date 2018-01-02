@@ -5,8 +5,9 @@ public enum TileType {
 	UNKNOWN('U'),
 	EMPTY('E'),
 	WALL('W'),
-	HUNTER('H'),
-	WUMPUS('X'),
+	// TODO Remove? Moving things are not tile type
+	//HUNTER('H'), 
+	//WUMPUS('X'),
 	PIT('P'),
 	GOLD('G');
 	

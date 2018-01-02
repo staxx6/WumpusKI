@@ -8,15 +8,21 @@ import java.util.Set;
 import de.fh.util.Vector2;
 
 /*
- * TODO: Rename to Tile
+ * TODO: Add a toString() methode
  */
 
+/*
+ * A Tile contain all the inforamtion about
+ * position, type and possible types.   
+ */
 public class Tile {
 	private TileType type;
 	private Vector2 pos;
 	private Set<TileType> possibleTypes;
-	private boolean breeze = false;
+	private boolean breeze = false; //TODO write down why it shouldn't be a TileType
 	private Set<Integer> wumpusIds;
+	
+	// TODO heuristic stuff
 	
 	public Tile(final TileType type, final Vector2 pos) {
 		this.type = type;
@@ -81,6 +87,15 @@ public class Tile {
 		if(this.type == TileType.UNKNOWN) 
 			this.possibleTypes.add(type);
 	}
+	
+	//TODO: Untested
+	public void removePossibleType(final TileType type) {
+		if(this.possibleTypes == null) return;
+		if(!this.possibleTypes.remove(type)) {
+			System.out.println("DEBUG: Couldn't remove possible tile type " + type 
+					+ " from tile: " + toString());
+		}; // TODO Error if not there? looks it returns a bool
+	}
 
 	public boolean isBreeze() {
 		return breeze;
@@ -91,7 +106,7 @@ public class Tile {
 	}
 
 	/*
-	 * @return Could be a null return 
+	 * @return Could be a null return = no wumpus
 	 */
 	public Set<Integer> getWumpusIds() {
 		return wumpusIds;
@@ -102,6 +117,7 @@ public class Tile {
 		this.wumpusIds.add(id);
 	}
 	
+	//TODO Possible error if empty?
 	public void removeWumpusId(final int id) {
 		this.wumpusIds.remove(id);
 	}

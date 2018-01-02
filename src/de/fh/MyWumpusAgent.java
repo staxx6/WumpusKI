@@ -114,19 +114,15 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         		 switch(this.hunterDir) {
         		 case NORTH:
         			 this.hunterPos.setY(this.hunterPos.getY() - 1);
-        			 System.out.println("pos to n");
         			 break;
         		 case EAST:
         			 this.hunterPos.setX(this.hunterPos.getX() + 1);
-        			 System.out.println("pos to e");
         			 break;
         		 case SOUTH:
         			 this.hunterPos.setY(this.hunterPos.getY() + 1);
-        			 System.out.println("pos to s");
         			 break;
         		 case WEST:
         			 this.hunterPos.setX(this.hunterPos.getX() - 1);
-        			 System.out.println("pos to w");
         			 break;
         		 default:
         			 System.out.println("ERROR: Direction dosn't exist?");
@@ -178,23 +174,18 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
 			 this.nextAction = HunterAction.TURN_RIGHT;    
 			 this.wasTurn = true;
-			 System.out.println("act set Turn");
 			 switch(this.hunterDir) {
 			 	case NORTH:
 			 		this.hunterDir = Direction.EAST;
-			 		System.out.println("dir to east");
 			 		break;
 			 	case EAST:
 			 		this.hunterDir = Direction.SOUTH;
-			 		System.out.println("dir to s");
 			 		break;
 			 	case SOUTH:
 			 		this.hunterDir = Direction.WEST;
-			 		System.out.println("dir to w");
 			 		break;
 			 	case WEST:
 			 		this.hunterDir = Direction.NORTH;
-			 		System.out.println("dir to n");
 			 		break;
 			 	default:
 			 		System.out.println("ERROR: Direction dosn't exist?");
@@ -202,7 +193,6 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			 }
         } else {
         	this.nextAction = HunterAction.GO_FORWARD;
-        	System.out.println("act set forward");
         }
 		
 		if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {

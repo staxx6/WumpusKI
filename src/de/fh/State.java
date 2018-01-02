@@ -67,6 +67,7 @@ public class State {
 		}
 		
 		//TODO: Not tested
+		// If wumpus percept is empty remove alle wumpus around hunter withhin stench distance
 		if(percept.getWumpusStenchRadar().isEmpty()) {
 			System.out.println("EMPTY");
 			for(List<Tile> l : this.view) {
@@ -80,6 +81,8 @@ public class State {
 						n.removeAllWumpusIds();
 				}
 			}
+		// TODO: if the wumpus dosn*t move it can't be on a old place where
+		// the hunter was
 		} else {
 			// TODO: Dont know if right key<->Value // key=id
 			int hPosX = pos.getX();
@@ -97,6 +100,7 @@ public class State {
 				}
 			}
 		}
+		
 		if(percept.isGlitter()) getTile(pos).setTileType(TileType.GOLD);
 	}
 	
@@ -196,20 +200,25 @@ public class State {
 				Tile n = this.view.get(y).get(x);
 				if(n != null) {
 					if(n.getTileType() == TileType.UNKNOWN) {
-						s += "(";
-						for(TileType t : n.getPossibleTypes()) {
-							if(t == null) break; //TODO need it by foreach?
-							if(t == TileType.WUMPUS) {
-								for(Integer i : n.getWumpusIds())
-									s += i + ",";
-							} else {
+						//if(n.getPossibleTypes() == null) continue; //TODO stuipd fix?
+						// shouldnt be ther something if is it unknown?
+						
+						// Possible empty if there was a wumpus
+						if(n.getPossibleTypes() != null) {
+							s += "(";
+							for(TileType t : n.getPossibleTypes()) {
+								//if(t == null) break; //TODO need it by foreach?
 								s += t.getSymbol();
 							}
+							s += ")";
 						}
-						s += ")";
 					} else {
 						s += " " + n.getTileType().getSymbol() + " ";
 					}
+					if(n.getWumpusIds() != null)
+						for(Integer i : n.getWumpusIds()) {
+							s += i;
+						}
 					if(n.isBreeze()) {
 						s = s.substring(0, s.length() - 1);
 						s += "B";
