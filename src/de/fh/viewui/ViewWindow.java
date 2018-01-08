@@ -1,4 +1,4 @@
-package viewui;
+package de.fh.viewui;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -22,8 +22,6 @@ public class ViewWindow extends Application {
 	
 	public static final CountDownLatch latch = new CountDownLatch(1);
 	public static ViewWindow viewWindow;
-	
-	
 	
 	public ViewWindow() {
 		setViewWindow(this);

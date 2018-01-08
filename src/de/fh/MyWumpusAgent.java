@@ -3,11 +3,11 @@ package de.fh;
 import de.fh.agent.WumpusHunterAgent;
 import de.fh.game.Entity.Direction;
 import de.fh.util.Vector2;
+import de.fh.viewui.ViewWindow;
 import de.fh.wumpus.HunterPercept;
 import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
 import javafx.application.Application;
-import viewui.ViewWindow;
 
 import java.util.Hashtable;
 import java.util.List;
@@ -32,13 +32,13 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	
 	public static void main(String[] args) {
 		
+		// Start a new thread for the debug window
 		new Thread(){
 			@Override
 			public void run() {
 				javafx.application.Application.launch(ViewWindow.class);
 			}
 		}.start();
-		
 		ViewWindow viewWindow = ViewWindow.waitForViewWindow();
 		
 		MyWumpusAgent agent = new MyWumpusAgent("");
