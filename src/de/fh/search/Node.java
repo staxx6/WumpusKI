@@ -11,7 +11,7 @@ public class Node {
 
 	private Tile tile;
 	private Node parentNode;
-	private NodeValue nodeValue;
+	private NodeValue nodeValue; // null
 	
 	public Node(final Tile tile) {
 		this.tile = tile;
@@ -20,5 +20,31 @@ public class Node {
 	public Node(final Tile tile, final Node parentNode) {
 		this(tile);
 		this.parentNode = parentNode;
+	}
+	
+	public Tile getTile() {
+		return this.tile;
+	}
+	
+	public float getValue() {
+		return this.nodeValue.getValue();
+	}
+	
+	/*
+	 * Weak comparing but should be enough
+	 * TODO: Untested
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if(o == null) return false;
+		if(o == this) return true;
+		if(!o.getClass().equals(getClass())) return false;
+		Node that = (Node) o;
+		if(that.getTile().getPosVector().getX() == this.getTile().getPosX() 
+			&& that.getTile().getPosVector().getY() == this.getTile().getPosY()) {
+			return true;
+		} else {
+			return false; 
+		}
 	}
 }

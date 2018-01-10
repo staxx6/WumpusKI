@@ -122,6 +122,12 @@ public class State {
 		//TODO: add cost/ heuristic values here? 
 	}
 	
+	/*
+	 * Get a tile from position (x, y), if there
+	 * isn't a tile it creates a new one.
+	 * 
+	 * @return tile
+	 */
 	public Tile getTile(final int x, final int y) {
 		Tile n = this.view.get(y).get(x);
 		if(n == null) {
@@ -131,6 +137,12 @@ public class State {
 		return n;
 	}
 	
+	/*
+	 * Get a tile from position (Vector2 pos), if there
+	 * isn't a tile it creates a new one.
+	 * 
+	 * @return tile
+	 */
 	public Tile getTile(final Vector2 pos) {
 		Tile n = this.view.get(pos.getY()).get(pos.getX());
 		if(n == null) {
