@@ -1,8 +1,6 @@
 package de.fh;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import de.fh.util.Vector2;
@@ -21,8 +19,6 @@ public class Tile {
 	private Set<TileType> possibleTypes;
 	private boolean breeze = false; //TODO write down why it shouldn't be a TileType
 	private Set<Integer> wumpusIds;
-	
-	// TODO heuristic stuff
 	
 	public Tile(final TileType type, final Vector2 pos) {
 		this.type = type;

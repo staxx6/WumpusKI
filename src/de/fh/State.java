@@ -1,7 +1,6 @@
 package de.fh;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +10,6 @@ import de.fh.wumpus.WumpusStartInfo;
 
 /*
  * TODO: No growing List! IndexOutOfBoundsException possible by getNode!!! 
- * TODO: Rename to "State"
  * TODO: Fix wumpus radar
  */
 
@@ -21,11 +19,13 @@ public class State {
 	private int stenchRadius;
 	
 	private List<List<Tile>> view;
+	private Vector2 hunterPos;
 
 	public State(final List<List<Tile>> view,
-			final Vector2 startPos, final WumpusStartInfo startInfo) {
+			final Vector2 startPos, final WumpusStartInfo startInfo, final Vector2 hunterPos) {
 		this.startInfo = startInfo;
 		this.view = view;
+		this.hunterPos = hunterPos;
 		
 		this.stenchRadius = startInfo.getStenchDistance();
 		
@@ -66,7 +66,6 @@ public class State {
 			getTile(pos).setBreeze(true);
 		}
 		
-		//TODO: Not tested
 		// If wumpus percept is empty remove alle wumpus around hunter withhin stench distance
 		if(percept.getWumpusStenchRadar().isEmpty()) {
 			System.out.println("EMPTY");
@@ -87,9 +86,11 @@ public class State {
 			// TODO: Dont know if right key<->Value // key=id
 			int hPosX = pos.getX();
 			int hPosY = pos.getY();
+			int radius = this.stenchRadius;
 			for(Map.Entry<Integer, Integer> id : percept.getWumpusStenchRadar().entrySet()) {
-				for(int y = hPosY - this.stenchRadius; y < hPosY + this.stenchRadius; y++) {
-					for(int x = hPosX - this.stenchRadius; x  < hPosX + this.stenchRadius; x++) {
+				
+				for(int y = hPosY - radius; y < hPosY + radius; y++) {
+					for(int x = hPosX - radius; x  < hPosX + radius; x++) {
 						Tile n = getTile(x, y);
 						int distance =  Math.abs(hPosX - n.getPosX()) 
 				        		+ Math.abs(hPosY - n.getPosY());
@@ -98,6 +99,7 @@ public class State {
 						}
 					}
 				}
+				
 			}
 		}
 		
@@ -183,7 +185,7 @@ public class State {
 	 *  H = Hunter
 	 *  W = Wall
 	 *  G = Gold
-	 *  X = Wumpus
+	 *  IDs numbers = Wumpus
 	 *  P = Pit
 	 *  B = Breeze
 	 */
@@ -215,17 +217,28 @@ public class State {
 					} else {
 						s += " " + n.getTileType().getSymbol() + " ";
 					}
-					if(n.getWumpusIds() != null)
+					// --- Wumpus ---
+					if(n.getWumpusIds() != null && !n.getWumpusIds().isEmpty()) {
+						s += "(";
 						for(Integer i : n.getWumpusIds()) {
 							s += i;
 						}
+						s += ")";
+					}
+					// --- Wumpus END ---
 					if(n.isBreeze()) {
 						s = s.substring(0, s.length() - 1);
 						s += "B";
 					}
 				} else {
-					s += "e  ";
+					s += "e   ";
 				}
+				// --- Hunter ---
+				if(x == hunterPos.getX() && y == hunterPos.getY()) {
+					s = s.substring(0, s.length() - 1);
+					s += "H ";
+				}
+				// --- Hunter END ---
 			}
 			s += "\n";
 		}

@@ -1,13 +1,13 @@
 package de.fh;
 
 import de.fh.agent.WumpusHunterAgent;
-import de.fh.game.Entity;
 import de.fh.game.Entity.Direction;
 import de.fh.util.Vector2;
-import de.fh.wumpus.Hunter;
+import de.fh.viewui.ViewWindow;
 import de.fh.wumpus.HunterPercept;
 import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
+import javafx.application.Application;
 
 import java.util.Hashtable;
 import java.util.List;
@@ -20,7 +20,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
 	private HunterPercept percept;
 	private HunterActionEffect actionEffect;
-	private Hashtable<Integer, Integer> stenchRadar;
+	//TODO Unused?
+//	private Hashtable<Integer, Integer> stenchRadar;
 	
 	private List<List<Tile>> currView;	
 	private State state;
@@ -30,7 +31,16 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private boolean wasTurn;
 	
 	public static void main(String[] args) {
-
+		
+		// Start a new thread for the debug window
+		new Thread(){
+			@Override
+			public void run() {
+				javafx.application.Application.launch(ViewWindow.class);
+			}
+		}.start();
+		ViewWindow viewWindow = ViewWindow.waitForViewWindow();
+		
 		MyWumpusAgent agent = new MyWumpusAgent("");
 		MyWumpusAgent.start(agent,"127.0.0.1", 5000);
 	}
@@ -62,8 +72,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.hunterPos = new Vector2(startPos.getX(), startPos.getY());
 			this.hunterDir = startInfo.getAgentDirection();
 			this.wasTurn = false;
-			stenchRadar = percept.getWumpusStenchRadar();
-			this.state = new State(this.currView, startPos, this.startInfo);
+//			stenchRadar = percept.getWumpusStenchRadar();
+			this.state = new State(this.currView, startPos, this.startInfo, this.hunterPos);
 		}
 
         if(actionEffect == HunterActionEffect.GAME_OVER) {
@@ -146,7 +156,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 System.out.println("DEBUG: No more arrows!");
          }
 		
-		stenchRadar = this.percept.getWumpusStenchRadar();
+//		stenchRadar = this.percept.getWumpusStenchRadar();
 		
 		System.out.println("update now");
 		this.state.update(hunterPos, percept);
