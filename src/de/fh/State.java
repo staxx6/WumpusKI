@@ -95,7 +95,7 @@ public class State {
 						int distance =  Math.abs(hPosX - n.getPosX()) 
 				        		+ Math.abs(hPosY - n.getPosY());
 						if(distance == id.getValue()) {
-							n.addWumpusId(id.getKey());
+							n.addWumpusId(id.getKey(), id.getValue());
 						}
 					}
 				}

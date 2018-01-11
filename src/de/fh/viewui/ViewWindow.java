@@ -14,10 +14,8 @@ import javafx.stage.Stage;
 /*
  * Create a new window and show the current state and
  * some stats 
- * 
- * TODO rename package de.fh.viewclass
  */
-// TODO all stuff
+// TODO: all stuff
 public class ViewWindow extends Application {
 	
 	public static final CountDownLatch latch = new CountDownLatch(1);

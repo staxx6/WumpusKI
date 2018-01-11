@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import de.fh.util.Vector2;
 import de.fh.Direction;
 import de.fh.State;
+import de.fh.Tile;
 import de.fh.TileType;
 
 /*
@@ -14,17 +15,19 @@ import de.fh.TileType;
 public class Search {
 
 	private Goal goal;
+	private SearchValues searchValues;
 	
 	private ArrayList<Node> openList;
 	private ArrayList<Node> closedList;
 	
 	private State state; 
 	
-	public Search(final Goal goal) {
+	public Search(final Goal goal, final SearchValues values) {
 		openList = new ArrayList<>();
 		closedList = new ArrayList<>();
 		
 		this.goal = goal; // a "U" Tile e.g.
+		this.searchValues = searchValues;
 	}
 	
 	public Node start(final Vector2 startPos) {
@@ -97,7 +100,7 @@ public class Search {
 	private void addNode(final Node expansionCandidate) {
 		int newIndex = 0;
 		for(Node n : this.openList) {
-			if(n.getValue() < expansionCandidate.getValue()) {
+			if(n.getValue().get() < expansionCandidate.getValue().get()) {
 				newIndex++;
 			} else {
 				break;
@@ -107,8 +110,29 @@ public class Search {
 	}
 	
 	private void evaluateNode(final Node expansionCandidate) {
-		//TODO: calc risk here
+		Tile tile = expansionCandidate.getTile();
+		NodeValue nodeValue = expansionCandidate.getValue();
+		float risk = 0;
+		
+		if(tile.getTileType() == TileType.UNKNOWN) {
+			for(TileType type : tile.getPossibleTypes()) {
+				if(type == TileType.WALL) risk += this.searchValues.getWall();
+				else if(type == TileType.PIT) risk += this.searchValues.getPit();
+			}
+		}
+		// risk unchanged if type empty = 0
+		
+		if(tile.getWumpusIds() != null && !tile.getWumpusIds().isEmpty()) {
+			for(int id : tile.getWumpusIds()) {
+				risk += this.searchValues.getWumpusDistanceFac() 
+						/ tile.getWumpusDistance(id);
+			}
+		}
+		
+		nodeValue.setRisk(risk);
+		
 		//TODO: calc path cost
+		float distance = nodeValue.getPathCost() + 1;
 	}
 }
 

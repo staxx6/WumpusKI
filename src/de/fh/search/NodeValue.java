@@ -11,11 +11,26 @@ public class NodeValue {
 	private float pathCost;
 	private float risk;
 	
-	public NodeValue(final int value) {
-		this.value = value;
+	public NodeValue() {
 	}
 	
-	public float getValue() {
-		return value;
+	public void setPathCost(final float pathCost) {
+		this.pathCost = pathCost;
+	}
+	
+	public float getPathCost() {
+		return this.pathCost;
+	}
+	
+	public void setRisk(final float risk) {
+		this.risk = risk;
+	}
+	
+	/*
+	 * Returns f(x) = g(x) + h(x)
+	 * 
+	 */
+	public float get() {
+		return pathCost + risk;
 	}
 }

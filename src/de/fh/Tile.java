@@ -1,6 +1,8 @@
 package de.fh;
 
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Set;
 
 import de.fh.util.Vector2;
@@ -18,7 +20,8 @@ public class Tile {
 	private Vector2 pos;
 	private Set<TileType> possibleTypes;
 	private boolean breeze = false; //TODO write down why it shouldn't be a TileType
-	private Set<Integer> wumpusIds;
+//	private Set<Integer> wumpusIds;
+	private Hashtable<Integer, Integer> wumpuse;
 	
 	public Tile(final TileType type, final Vector2 pos) {
 		this.type = type;
@@ -105,22 +108,26 @@ public class Tile {
 	 * @return Could be a null return = no wumpus
 	 */
 	public Set<Integer> getWumpusIds() {
-		return wumpusIds;
+		return wumpuse.keySet();
+	}
+	
+	public int getWumpusDistance(final int id) {
+		return wumpuse.get(id);
 	}
 
-	public void addWumpusId(final int id) {
-		if(this.wumpusIds == null) this.wumpusIds = new HashSet<>();
-		this.wumpusIds.add(id);
+	public void addWumpusId(final int id, final int distance) {
+		if(this.wumpuse == null) this.wumpuse = new Hashtable<>();
+		this.wumpuse.put(id, distance);
 	}
 	
 	//TODO Possible error if empty?
 	public void removeWumpusId(final int id) {
-		this.wumpusIds.remove(id);
+		this.wumpuse.remove(id);
 	}
 	
 	public void removeAllWumpusIds() {
-		if(this.wumpusIds != null)
-			this.wumpusIds.clear();
+		if(this.wumpuse != null)
+			this.wumpuse.clear();
 	}
 }
 

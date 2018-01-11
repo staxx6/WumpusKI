@@ -7,9 +7,7 @@ import de.fh.viewui.ViewWindow;
 import de.fh.wumpus.HunterPercept;
 import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
-import javafx.application.Application;
 
-import java.util.Hashtable;
 import java.util.List;
 
 /*
@@ -46,7 +44,6 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	}
 
 	public MyWumpusAgent(String name) {
-
 		super(name);
 	}
 

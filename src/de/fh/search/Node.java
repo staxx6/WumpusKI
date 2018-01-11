@@ -26,8 +26,16 @@ public class Node {
 		return this.tile;
 	}
 	
-	public float getValue() {
-		return this.nodeValue.getValue();
+	public NodeValue getValue() {
+		return this.nodeValue;
+	}
+	
+	/*
+	 * Returns the parent node. This could return a null value
+	 * if root node!  
+	 */
+	public Node getParentNode() {
+		return parentNode;
 	}
 	
 	/*
