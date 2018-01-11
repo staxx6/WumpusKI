@@ -3,6 +3,7 @@ package de.fh.search;
 import java.util.ArrayList;
 
 import de.fh.util.Vector2;
+import de.fh.Direction;
 import de.fh.State;
 import de.fh.TileType;
 
@@ -11,10 +12,6 @@ import de.fh.TileType;
  * TODO: Untested
  */
 public class Search {
-	
-	private enum Direction {
-		NORTH, EAST, SOUTH, WEST;
-	}
 
 	private Goal goal;
 	
@@ -27,7 +24,7 @@ public class Search {
 		openList = new ArrayList<>();
 		closedList = new ArrayList<>();
 		
-		this.goal = goal; // a U/e Tile e.g.
+		this.goal = goal; // a "U" Tile e.g.
 	}
 	
 	public Node start(final Vector2 startPos) {
