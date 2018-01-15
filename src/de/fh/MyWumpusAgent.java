@@ -2,6 +2,11 @@ package de.fh;
 
 import de.fh.agent.WumpusHunterAgent;
 import de.fh.game.Entity.Direction;
+import de.fh.search.Goal;
+import de.fh.search.GoalGold;
+import de.fh.search.Node;
+import de.fh.search.Search;
+import de.fh.search.SearchValues;
 import de.fh.util.Vector2;
 import de.fh.viewui.ViewWindow;
 import de.fh.wumpus.HunterPercept;
@@ -16,7 +21,7 @@ import java.util.List;
  */
 public class MyWumpusAgent extends WumpusHunterAgent {
 
-	private HunterPercept percept;
+//	private HunterPercept percept;
 	private HunterActionEffect actionEffect;
 	//TODO Unused?
 //	private Hashtable<Integer, Integer> stenchRadar;
@@ -26,11 +31,21 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private Vector2 hunterPos;
 	private Direction hunterDir;
 	
+	private boolean initDone = false;
+	
+	private Goal currGoal;
+	private Search search; 
+	
 	private boolean wasTurn;
+	private boolean wasScream;
+	private boolean goalGold, goalLocation, goalKill;
+	
+	
 	
 	public static void main(String[] args) {
 		
 		// Start a new thread for the debug window
+		/*
 		new Thread(){
 			@Override
 			public void run() {
@@ -38,7 +53,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			}
 		}.start();
 		ViewWindow viewWindow = ViewWindow.waitForViewWindow();
-		
+		*/
 		MyWumpusAgent agent = new MyWumpusAgent("");
 		MyWumpusAgent.start(agent,"127.0.0.1", 5000);
 	}
@@ -61,7 +76,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	@Override
 	public void updateState(HunterPercept percept, HunterActionEffect actionEffect) {
 
-		this.percept = (HunterPercept) percept;
+//		this.percept = (HunterPercept) percept;
 
 		if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
 			 // 
@@ -71,6 +86,14 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.wasTurn = false;
 //			stenchRadar = percept.getWumpusStenchRadar();
 			this.state = new State(this.currView, startPos, this.startInfo, this.hunterPos);
+			
+			this.goalGold = true; // first goal
+			this.goalLocation = false;
+			this.goalKill = false;
+			
+			this.wasScream = false;
+			
+			this.initDone = true;
 		}
 
         if(actionEffect == HunterActionEffect.GAME_OVER) {
@@ -152,7 +175,11 @@ public class MyWumpusAgent extends WumpusHunterAgent {
          if(actionEffect == HunterActionEffect.NO_MORE_SHOOTS) {
         	 System.out.println("DEBUG: No more arrows!");
          }
-		
+         
+         if(percept.isScream()) {
+        	 this.wasScream = true;
+         }
+         
 //		stenchRadar = this.percept.getWumpusStenchRadar();
 		
 		System.out.println("update now");
@@ -178,6 +205,31 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	@Override
 	public HunterAction action() {
 		
+		// if game init isn't done do NOTHING 
+		if(!this.initDone) {
+			System.out.println("--- END STEP (NO action) ---");
+			return nextAction;
+		}
+			
+		if(this.goalGold) {
+			if(this.search == null)
+				this.search = new Search(new GoalGold(1), new SearchValues(), this.state);
+			//TODO dafuq - class ATT - brainstorming
+			Node goalNode = this.search.start(hunterPos);
+			System.out.println("Search found something: " + goalNode.toString());		
+		} else if (this.goalLocation) {
+			
+		}
+		
+		if(this.goalKill) {
+			// TODO
+		}
+		
+		if(this.wasScream) {
+			// TODO
+		}
+		
+		/*
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
 			 this.nextAction = HunterAction.TURN_RIGHT;    
 			 this.wasTurn = true;
@@ -205,6 +257,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
 			
         }
+		*/
 		
 		/*
 		 * TODO: 1. Go to EAST till wall and then go down... With this we have

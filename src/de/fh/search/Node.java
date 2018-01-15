@@ -15,6 +15,7 @@ public class Node {
 	
 	public Node(final Tile tile) {
 		this.tile = tile;
+		this.nodeValue = new NodeValue();
 	}
 	
 	public Node(final Tile tile, final Node parentNode) {
@@ -55,4 +56,26 @@ public class Node {
 			return false; 
 		}
 	}
+	
+	@Override
+	public String toString() {
+		return "Tile type: " + this.tile.getTileType() + " possible types: "
+				+ this.tile.getPossibleTypes() + " pos: " + this.tile.getPosX()
+					+ "x " + this.tile.getPosY() + "y";
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

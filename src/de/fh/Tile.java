@@ -108,6 +108,7 @@ public class Tile {
 	 * @return Could be a null return = no wumpus
 	 */
 	public Set<Integer> getWumpusIds() {
+		if(wumpuse == null) return null;	
 		return wumpuse.keySet();
 	}
 	

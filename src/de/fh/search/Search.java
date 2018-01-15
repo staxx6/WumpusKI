@@ -22,18 +22,20 @@ public class Search {
 	
 	private State state; 
 	
-	public Search(final Goal goal, final SearchValues values) {
+	public Search(final Goal goal, final SearchValues searchValues, 
+			final State state) {
 		openList = new ArrayList<>();
 		closedList = new ArrayList<>();
 		
 		this.goal = goal; // a "U" Tile e.g.
 		this.searchValues = searchValues;
+		this.state = state;
 	}
 	
 	public Node start(final Vector2 startPos) {
 		
 		// root node
-		addNode(new Node(state.getTile(startPos)));
+		addNode(new Node(this.state.getTile(startPos)));
 		
 		while(!openList.isEmpty()) {
 			// get first node from (sorted) list and remove it (pop)
@@ -96,19 +98,10 @@ public class Search {
 		return pos;
 	}
 	
-	// Insert the node to openList, value priority (from A*-Algo)
-	private void addNode(final Node expansionCandidate) {
-		int newIndex = 0;
-		for(Node n : this.openList) {
-			if(n.getValue().get() < expansionCandidate.getValue().get()) {
-				newIndex++;
-			} else {
-				break;
-			}
-		}
-		this.openList.add(newIndex, expansionCandidate);
-	}
 	
+	
+	// TODO: Risk tolerance bad like this, its with pathCost
+	// Evaluate Node value with A*-Algo
 	private void evaluateNode(final Node expansionCandidate) {
 		Tile tile = expansionCandidate.getTile();
 		NodeValue nodeValue = expansionCandidate.getValue();
@@ -133,6 +126,25 @@ public class Search {
 		
 		//TODO: calc path cost
 		float distance = nodeValue.getPathCost() + 1;
+	}
+	
+	// Insert the node to openList, value priority (from A*-Algo)
+	private void addNode(final Node expansionCandidate) {
+		if(expansionCandidate.getValue().getRisk() 
+				> goal.getRiskTolerance()) {
+			this.closedList.add(expansionCandidate);
+			return;
+		}
+		
+		int newIndex = 0;
+		for(Node n : this.openList) {
+			if(n.getValue().get() < expansionCandidate.getValue().get()) {
+				newIndex++;
+			} else {
+				break;
+			}
+		}
+		this.openList.add(newIndex, expansionCandidate);
 	}
 }
 

@@ -68,7 +68,7 @@ public class State {
 		
 		// If wumpus percept is empty remove alle wumpus around hunter withhin stench distance
 		if(percept.getWumpusStenchRadar().isEmpty()) {
-			System.out.println("EMPTY");
+			//System.out.println("EMPTY");
 			for(List<Tile> l : this.view) {
 				for(Tile n : l) {
 					if(n == null) continue;

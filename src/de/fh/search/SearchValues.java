@@ -6,6 +6,9 @@ public class SearchValues {
 	private float pit;
 	private float wumpusDistanceFac;
 	
+	/*
+	 * Create search values with standard values
+	 */
 	public SearchValues() {
 		this.wall = 0.5f;
 		this.pit = 10;

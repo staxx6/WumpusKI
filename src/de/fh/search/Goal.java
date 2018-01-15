@@ -4,10 +4,14 @@ public abstract class Goal {
 	
 	// Hunter's risk tolerance for this goal
 	// A bigger number means more risk
-	protected float risk;
+	protected float riskTolerance;
 	
 	protected Goal(final float risk) {
-		this.risk = risk;
+		this.riskTolerance = risk;
+	}
+	
+	public float getRiskTolerance() {
+		return this.riskTolerance;
 	}
 
 	/*
