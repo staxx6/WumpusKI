@@ -14,40 +14,28 @@ import de.fh.wumpus.HunterPercept;
 import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
 
-import java.util.List;
 import java.util.Stack;
 
 
 public class MyWumpusAgent extends WumpusHunterAgent {
 
-//	private HunterPercept percept;
-	private HunterActionEffect actionEffect;
-	//TODO Unused?
-//	private Hashtable<Integer, Integer> stenchRadar;
-	
-	private List<List<Tile>> currView;	// TODO: Remove
 	private State state;
-	private Vector2 hunterPos;
-	private Direction hunterDir;
+	
+	private HunterMoveHelper moveHelper;
 	
 	private boolean initDone = false;
 	
-	private Goal currGoal;
 	private Search search; 
 	
 //	private boolean wasTurn;
 	private boolean wasScream;
-	private boolean goalGold, goalLocation, goalKill;
-	private Node goalNode;
+	private boolean goalGold, goalKill;
 	
-	private Direction nextHunterDir;
-	private boolean isTurning;
 	private Stack<Vector2> nextActionListPos;
 	
 	
+	
 	public static void main(String[] args) {
-		
-//		if(new Vector2(1,2).equals(new Vector2(2, 2))) System.out.println("TRUE");
 		
 		// Start a new thread for the debug window
 		/*
@@ -59,6 +47,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		}.start();
 		ViewWindow viewWindow = ViewWindow.waitForViewWindow();
 		*/
+		
 		MyWumpusAgent agent = new MyWumpusAgent("");
 		MyWumpusAgent.start(agent,"127.0.0.1", 5000);
 	}
@@ -86,99 +75,83 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
 			
 			Vector2 startPos = new Vector2(18, 18);
-			this.hunterPos = new Vector2(startPos.getX(), startPos.getY());
-			this.hunterDir = startInfo.getAgentDirection();
-			this.nextHunterDir = this.hunterDir;
-//			this.wasTurn = false;
-//			stenchRadar = percept.getWumpusStenchRadar();
-			this.state = new State(this.currView, startPos, this.startInfo, this.hunterPos);
+			this.moveHelper = new HunterMoveHelper(new Vector2(startPos.getX(), startPos.getY()),
+					startInfo.getAgentDirection());
+			this.state = new State(startPos, this.startInfo, this.moveHelper.getCurrentPos());
 			
 			this.goalGold = true; // first goal
-			this.goalLocation = false;
 			this.goalKill = false;
 			
 			this.wasScream = false;
 			
 			this.initDone = true;
 			
-			this.isTurning = false;
 			this.nextActionListPos = new Stack<>();
+			
+			System.out.println("DEBUG: Game initialized");
 		}
 
         if(actionEffect == HunterActionEffect.GAME_OVER) {
         	System.out.println("DEBUG: Game Over!");         	
         }
 
-        // Here must be the wall so set it in state
-        // reset search!
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
-        	System.out.println("DEBUG: Bumped into wall!");
+        	System.out.println("DEBUG: Bumped into WALL!");
         	Tile n = null;
+        	Vector2 hunterPos = this.moveHelper.getCurrentPos();
         	// Only for debug - moves in circles
-        	switch(this.hunterDir) {
+        	switch(this.moveHelper.getCurrentDir()) {
         		case NORTH:
         			n = this.state.getTile(
-        					this.hunterPos.getX(), this.hunterPos.getY() - 1);
+        					hunterPos.getX(), hunterPos.getY() - 1);
         			break;
         		case EAST:
         			n = this.state.getTile(
-        					this.hunterPos.getX() + 1, this.hunterPos.getY());
+        					hunterPos.getX() + 1, hunterPos.getY());
         			break;
         		case SOUTH:
         			n = this.state.getTile(
-        					this.hunterPos.getX(), this.hunterPos.getY() + 1);
+        					hunterPos.getX(), hunterPos.getY() + 1);
         			break;
         		case WEST:
         			n = this.state.getTile(
-        					this.hunterPos.getX() - 1, this.hunterPos.getY());
+        					hunterPos.getX() - 1, hunterPos.getY());
         			break;
         		default:
         			System.out.println("ERROR: Direction dosn't exist!");
         	}
         	n.setTileType(TileType.WALL);
         	
-        	search = null;
+        	System.out.println("-> Search goal/location NOT found - new search");
+        	newSearch();
         }
 
          if(actionEffect == HunterActionEffect.BUMPED_INTO_HUNTER) {
         	 //TODO: set hunter to pos
+        	 //TODO: new search?
         	 //or other hunter bumped to this hunter?
-        	 System.out.println("DEBUG: Bumped into hunter!");
+        	 System.out.println("DEBUG: Bumped into HUNTER!");
          }
 
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
-        	 System.out.println("DEBUG: Movement successful");
+        	 System.out.println("DEBUG: Movement SUCCESSFUL");
         	 
-        	 // Ignore pos change if last update was just a turn
-        	 // TODO: Wumpus moves\rumbles  here too?
-        	 if(!this.isTurning) {
-        		 // Update Hunter postition
-        		 switch(this.hunterDir) {
-        		 case NORTH:
-        			 this.hunterPos.setY(this.hunterPos.getY() - 1);
-        			 break;
-        		 case EAST:
-        			 this.hunterPos.setX(this.hunterPos.getX() + 1);
-        			 break;
-        		 case SOUTH:
-        			 this.hunterPos.setY(this.hunterPos.getY() + 1);
-        			 break;
-        		 case WEST:
-        			 this.hunterPos.setX(this.hunterPos.getX() - 1);
-        			 break;
-        		 default:
-        			 System.out.println("ERROR: Direction dosn't exist?");
-        			 break;
+        	 if(this.moveHelper.getCurrentPos().equals(this.nextActionListPos.peek())) {
+        		 this.nextActionListPos.pop();
+        		 if(this.nextActionListPos.isEmpty()) {
+        			 System.out.println("Search goal/location found!");
+        			 newSearch();
         		 }
         	 }
+        	 this.moveHelper.updatePos();
          }
 
          if(actionEffect == HunterActionEffect.GOLD_FOUND) {
-        	 System.out.println("DEBUG: Collected gold!");
+        	 System.out.println("DEBUG: Collected GOLD!");
          }
 
          if(actionEffect == HunterActionEffect.WUMPUS_KILLED) {
-        	 System.out.println("DEBUG: Wumpus killed!");
+        	 System.out.println("DEBUG: Wumpus KILLED!");
          }
 
          if(actionEffect == HunterActionEffect.NO_MORE_SHOOTS) {
@@ -189,12 +162,13 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 this.wasScream = true;
          }
          
-//		stenchRadar = this.percept.getWumpusStenchRadar();
-		
 		System.out.println("DEBUG: Update now own state");
-		this.state.update(hunterPos, percept);
+		this.state.update(this.moveHelper.getCurrentPos(), percept);
 		
-		this.actionEffect = actionEffect;
+		if(this.search == null) {
+			newSearch();
+		}
+		
 		System.out.println(this.state.toStringPossible());
 //		System.out.println(this.state.toStringKnown());
 	}
@@ -222,75 +196,87 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			return HunterAction.SIT; // TODO: Untested!
 		}
 		
-		checkGoal();
+		if(this.state.getHunterTile().getTileType() == TileType.GOLD) {
+			// TODO: Well, do other stuff
+			return HunterAction.GRAB;
+		}
 		
 		if(this.wasScream) {
 			// TODO
 		}
+
+		if(!this.nextActionListPos.isEmpty()) {
+			this.moveHelper.moveTo(this.nextActionListPos.peek());
+		} else {
+			throw new IllegalStateException("ERROR: ActionList is empty! Should not be heppning here.");
+		}
+		
+		/*
+		newSearch(); // TODO: remove this one?
+		
 		
 		// exit action() if it has to turn
 		// TODO: possible problems if wumpus moved!!!
 		// TODO: fix actionList pop()
-		turnToNextDir(); // End the turn ignore other actions
+		turnToNextDir(); // set isTurn
 		if(this.isTurning) {
 			System.out.println("Turning");
 			return this.nextAction;
 		} else {
-			if(this.hunterPos.equals(this.nextActionListPos.peek()) 
-					|| actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
-				this.nextActionListPos.pop();
-			}
+//			if(this.hunterPos.equals(this.nextActionListPos.peek()) 
+//					|| actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
+//
+//				// TODO: NIPPEWLPORDÄEAS
+//				
+//				this.nextActionListPos.clear();
+//				System.out.println("CLEARD LIST");
+//				this.search = null;
+//				checkGoal();
+//				goToNextTile(this.nextActionListPos.peek());
+//				turnToNextDir();
+//			}
 			if(!this.nextActionListPos.isEmpty()) {
 				goToNextTile(this.nextActionListPos.peek());
+				newSearch();
 				turnToNextDir();
 			} else {
 //				throw new IllegalStateException("ERROR: No action for this step!");
 				this.search = null;
-				checkGoal();
+				newSearch();
 			}
 			
 			if(!this.isTurning && this.search != null) {
 				this.nextAction = HunterAction.GO_FORWARD;
+				this.nextActionListPos.pop();
 				System.out.println("No turning go forward");
 			}
 		}
-		
-		
-		
-		/*
-		 * TODO: 1. Go to EAST till wall and then go down... With this we have
-		 * 		 have a level border
-		 * 		 2. Go to next dark tile if sure there is nothing
-		 * 		 3. Go to next unsure dark tile with lowest posibility of bad things
-		 * 			-> Wall > Pit > Wumpus
-		 * 
-		 * 		 - Shoot if sure where wumpus is
-		 * 		 - Shoot if unsure and have enough arrows
-		 * 			-> more arrows more risk shoots
-		 * 		 - collect gold
-		 *		 - Go away if stench to strong
-		 *			-> but good shoot spot 
-		 */
+		*/
 		
 		System.out.println("--- END STEP (action now SERVER) ---\n");
 		return nextAction;
 	}
 	
-	private void checkGoal() {
+	private void newSearch() {
+		this.search = null;
+		this.nextActionListPos.clear();
+		
 		if(this.goalGold) {
-			if(this.search == null) {
-				this.search = new Search(new GoalGold(1), new SearchValues(), this.state);
-				Node iNode = this.search.start(hunterPos);
-				System.out.println("Hunter Pos is: " + this.hunterPos.toString());
-				System.out.println("Search found something: " + iNode);		
-				if(this.nextActionListPos == null) this.nextActionListPos = new Stack<>();
-				while(iNode != null) {
-					this.nextActionListPos.push(iNode.getTile().getPosVector());
-					iNode = iNode.getParentNode();
-				}
-				this.nextActionListPos.pop(); // last one is root (hunterpos)
-				System.out.println("Created actionList: " + this.nextActionListPos);
-			} 
+			this.search = new Search(new GoalGold(1), new SearchValues(), this.state);
+			Node iNode = this.search.start(this.moveHelper.getCurrentPos());
+			
+			System.out.println("Hunter Pos is: " + this.moveHelper.getCurrentPos().toString());
+			System.out.println("Search found something: " + iNode);
+			
+			this.nextActionListPos.clear();
+			while(iNode != null) {
+				this.nextActionListPos.push(iNode.getTile().getPosVector());
+//				System.out.println("List added: " + iNode);
+				iNode = iNode.getParentNode();
+			}
+//				this.nextActionListPos.pop(); // last one is root (hunterpos)
+			System.out.println("List removed: " + this.nextActionListPos.pop());
+			System.out.println("Created actionList: " + this.nextActionListPos);
 		}
 		
 		if(this.goalKill) {
@@ -304,35 +290,36 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	 * Next tile can be only (should be...)  in one direction - 
 	 * direct neighbour 
 	 */
-	private void goToNextTile(final Vector2 pos) {
-		System.out.println("call goToNextTile methode");
-		if(this.hunterPos.equals(pos)) {
-			System.out.println("hunterPos: " + this.hunterPos +
-					" and goToPos: " + pos + " - is equal -> return;");
-			return;
-		}
-		
-		Direction nextDir = this.hunterDir;
-		
-		System.out.print("Go to pos: " + pos + " ");
-		
-		if(this.hunterPos.getX() > pos.getX()) {
-			nextDir = Direction.WEST;
-			System.out.println("WEST");
-		} else if(this.hunterPos.getX() < pos.getX()) {
-			nextDir = Direction.EAST;
-			System.out.println("EAST");
-		}
-		
-		if(this.hunterPos.getY() > pos.getY()) {
-			nextDir = Direction.NORTH;
-			System.out.println("NORTH");
-		} else if(this.hunterPos.getY() < pos.getY()) {
-			nextDir = Direction.SOUTH;
-			System.out.println("SOUTH");
-		}
-		this.nextHunterDir = nextDir;
-	}
+//	private void goToNextTile(final Vector2 pos) {
+//		System.out.println("call goToNextTile methode");
+//		if(this.hunterPos.equals(pos)) {
+//			this.search = null;
+//			System.out.println("hunterPos: " + this.hunterPos +
+//					" and goToPos: " + pos + " - is equal -> return;");
+//			return;
+//		}
+//		
+//		Direction nextDir = this.hunterDir;
+//		
+//		System.out.print("Go to pos: " + pos + " ");
+//		
+//		if(this.hunterPos.getX() > pos.getX()) {
+//			nextDir = Direction.WEST;
+//			System.out.println("WEST");
+//		} else if(this.hunterPos.getX() < pos.getX()) {
+//			nextDir = Direction.EAST;
+//			System.out.println("EAST");
+//		}
+//		
+//		if(this.hunterPos.getY() > pos.getY()) {
+//			nextDir = Direction.NORTH;
+//			System.out.println("NORTH");
+//		} else if(this.hunterPos.getY() < pos.getY()) {
+//			nextDir = Direction.SOUTH;
+//			System.out.println("SOUTH");
+//		}
+//		this.nextHunterDir = nextDir;
+//	}
 	
 	//TODO: Untested!
 	/*
@@ -343,56 +330,56 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	 * 
 	 * TODO: Possible better solution?
 	 */
-	private void turnToNextDir() {
-		System.out.println("call turnToNextDir curr hunterDir: " + this.hunterDir);
-		if(this.hunterDir != this.nextHunterDir) {
-			System.out.print("!should be: " + this.nextHunterDir);
-			if(this.hunterDir == Direction.NORTH) {
-				if(this.nextHunterDir == Direction.WEST) {
-					this.nextAction = HunterAction.TURN_LEFT;
-					this.hunterDir = Direction.WEST;
-					System.out.println(" turn LEFT hunterDir set to WEST");
-				} else {
-					this.nextAction = HunterAction.TURN_RIGHT;
-					this.hunterDir = Direction.EAST;
-					System.out.println(" turn RIGHT hunterDir set to EAST");
-				}
-			} else if(this.hunterDir == Direction.EAST) {
-				if(this.nextHunterDir == Direction.NORTH) {
-					this.nextAction = HunterAction.TURN_LEFT;
-					this.hunterDir = Direction.NORTH;
-					System.out.println(" turn LEFT hunterDir set to NORTH");
-				} else {
-					this.nextAction = HunterAction.TURN_RIGHT;
-					this.hunterDir = Direction.SOUTH;
-					System.out.println(" turn RIGHT hunterDir set to SOUTH");
-				}
-			} else if(this.hunterDir == Direction.SOUTH) {
-				if(this.nextHunterDir == Direction.EAST) {
-					this.nextAction = HunterAction.TURN_LEFT;
-					this.hunterDir = Direction.EAST;
-					System.out.println(" turn LEFT hunterDir set to EAST");
-				} else {
-					this.nextAction = HunterAction.TURN_RIGHT;
-					this.hunterDir = Direction.WEST;
-					System.out.println(" turn RIGHT hunterDir set to WEST");
-				}
-			} else if(this.hunterDir == Direction.WEST) {
-				if(this.nextHunterDir == Direction.SOUTH) {
-					this.nextAction = HunterAction.TURN_LEFT;
-					this.hunterDir = Direction.SOUTH;
-					System.out.println(" turn LEFT hunterDir set to SOUTH");
-				} else {
-					this.nextAction = HunterAction.TURN_RIGHT;
-					this.hunterDir = Direction.NORTH;
-					System.out.println(" turn RIGHT hunterDir set to NORTH");
-				}
-			}
-			this.isTurning = true;
-			System.out.println("isTurning set to TRUE");
-		} else {
-			this.isTurning = false;
-			System.out.println("isTurning set to FALSE");
-		}
-	}
+//	private void turnToNextDir() {
+//		System.out.println("call turnToNextDir curr hunterDir: " + this.hunterDir);
+//		if(this.hunterDir != this.nextHunterDir) {
+//			System.out.print("!should be: " + this.nextHunterDir);
+//			if(this.hunterDir == Direction.NORTH) {
+//				if(this.nextHunterDir == Direction.WEST) {
+//					this.nextAction = HunterAction.TURN_LEFT;
+//					this.hunterDir = Direction.WEST;
+//					System.out.println(" turn LEFT hunterDir set to WEST");
+//				} else {
+//					this.nextAction = HunterAction.TURN_RIGHT;
+//					this.hunterDir = Direction.EAST;
+//					System.out.println(" turn RIGHT hunterDir set to EAST");
+//				}
+//			} else if(this.hunterDir == Direction.EAST) {
+//				if(this.nextHunterDir == Direction.NORTH) {
+//					this.nextAction = HunterAction.TURN_LEFT;
+//					this.hunterDir = Direction.NORTH;
+//					System.out.println(" turn LEFT hunterDir set to NORTH");
+//				} else {
+//					this.nextAction = HunterAction.TURN_RIGHT;
+//					this.hunterDir = Direction.SOUTH;
+//					System.out.println(" turn RIGHT hunterDir set to SOUTH");
+//				}
+//			} else if(this.hunterDir == Direction.SOUTH) {
+//				if(this.nextHunterDir == Direction.EAST) {
+//					this.nextAction = HunterAction.TURN_LEFT;
+//					this.hunterDir = Direction.EAST;
+//					System.out.println(" turn LEFT hunterDir set to EAST");
+//				} else {
+//					this.nextAction = HunterAction.TURN_RIGHT;
+//					this.hunterDir = Direction.WEST;
+//					System.out.println(" turn RIGHT hunterDir set to WEST");
+//				}
+//			} else if(this.hunterDir == Direction.WEST) {
+//				if(this.nextHunterDir == Direction.SOUTH) {
+//					this.nextAction = HunterAction.TURN_LEFT;
+//					this.hunterDir = Direction.SOUTH;
+//					System.out.println(" turn LEFT hunterDir set to SOUTH");
+//				} else {
+//					this.nextAction = HunterAction.TURN_RIGHT;
+//					this.hunterDir = Direction.NORTH;
+//					System.out.println(" turn RIGHT hunterDir set to NORTH");
+//				}
+//			}
+//			this.isTurning = true;
+//			System.out.println("isTurning set to TRUE");
+//		} else {
+//			this.isTurning = false;
+//			System.out.println("isTurning set to FALSE");
+//		}
+//	}
 }

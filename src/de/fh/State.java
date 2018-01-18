@@ -21,10 +21,9 @@ public class State {
 	private List<List<Tile>> view;
 	private Vector2 hunterPos;
 
-	public State(final List<List<Tile>> view,
-			final Vector2 startPos, final WumpusStartInfo startInfo, final Vector2 hunterPos) {
+	public State(final Vector2 startPos, final WumpusStartInfo startInfo, 
+			final Vector2 hunterPos) {
 		this.startInfo = startInfo;
-		this.view = view;
 		this.hunterPos = hunterPos;
 		
 		this.stenchRadius = startInfo.getStenchDistance();
@@ -118,6 +117,15 @@ public class State {
 		getTile(x, (y + 1)).addPossibleType(type);
 		//West
 		getTile((x - 1), y).addPossibleType(type);
+	}
+	
+	/*
+	 * Return the tile where the hunter is standing
+	 * 
+	 * @return tile
+	 */
+	public Tile getHunterTile() {
+		return getTile(this.hunterPos);
 	}
 	
 	/*
