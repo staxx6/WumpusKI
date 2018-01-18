@@ -53,7 +53,7 @@ public class State {
 	 * @param percept current percept from the hunter agent
 	 *
 	 *
-	 *TODO fix NPE
+	 *TODO fix NPE // no NPE?
 	 */
 	public void update(final Vector2 pos, final HunterPercept percept) {
 		// If nothing - have to be empty or some action happens like hit by wumpus
@@ -118,8 +118,6 @@ public class State {
 		getTile(x, (y + 1)).addPossibleType(type);
 		//West
 		getTile((x - 1), y).addPossibleType(type);
-		
-		//TODO: add cost/ heuristic values here? 
 	}
 	
 	/*
@@ -254,7 +252,7 @@ public class State {
 			}
 			s += "\n";
 		}
-		s += "----------------------------------------------\n";
+		s += "----------------------------------------------";
 		return s;
 	}
 }

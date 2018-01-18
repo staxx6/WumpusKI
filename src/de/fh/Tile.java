@@ -70,6 +70,9 @@ public class Tile {
 		return this.pos.getY();
 	}
 
+	/*
+	 * @return all possible tiles. Could return NULL!
+	 */
 	public Set<TileType> getPossibleTypes() {
 		return possibleTypes;
 	}

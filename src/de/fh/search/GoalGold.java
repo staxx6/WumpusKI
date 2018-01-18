@@ -20,10 +20,13 @@ public class GoalGold extends Goal {
 	*/
 	@Override
 	public boolean isNodeGoal(final Node node) {
+		System.out.println("Goal check: " + node);
 		if(node.getTile().getTileType() == TileType.UNKNOWN 
 				&& node.getValue().getRisk() <= this.riskTolerance) {
+			System.out.println(" -> is goal!");
 			return true;
 		}
+		System.out.println(" -> is NOT goal!");
 		return false;
 	}
 }

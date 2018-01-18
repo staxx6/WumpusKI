@@ -39,7 +39,6 @@ public class NodeValue {
 	
 	/*
 	 * Returns f(x) = g(x) + h(x)
-	 * 
 	 */
 	public float get() {
 		return pathCost + risk;

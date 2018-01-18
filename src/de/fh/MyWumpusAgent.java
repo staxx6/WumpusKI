@@ -1,5 +1,6 @@
 package de.fh;
 
+
 import de.fh.agent.WumpusHunterAgent;
 import de.fh.game.Entity.Direction;
 import de.fh.search.Goal;
@@ -14,11 +15,9 @@ import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
 
 import java.util.List;
+import java.util.Stack;
 
-/*
- * DIESE KLASSE VERÄNDERN SIE BITTE NUR AN DEN GEKENNZEICHNETEN STELLEN
- * wenn die Bonusaufgabe bewertet werden soll.
- */
+
 public class MyWumpusAgent extends WumpusHunterAgent {
 
 //	private HunterPercept percept;
@@ -26,7 +25,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	//TODO Unused?
 //	private Hashtable<Integer, Integer> stenchRadar;
 	
-	private List<List<Tile>> currView;	
+	private List<List<Tile>> currView;	// TODO: Remove
 	private State state;
 	private Vector2 hunterPos;
 	private Direction hunterDir;
@@ -36,13 +35,19 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private Goal currGoal;
 	private Search search; 
 	
-	private boolean wasTurn;
+//	private boolean wasTurn;
 	private boolean wasScream;
 	private boolean goalGold, goalLocation, goalKill;
+	private Node goalNode;
 	
+	private Direction nextHunterDir;
+	private boolean isTurning;
+	private Stack<Vector2> nextActionListPos;
 	
 	
 	public static void main(String[] args) {
+		
+//		if(new Vector2(1,2).equals(new Vector2(2, 2))) System.out.println("TRUE");
 		
 		// Start a new thread for the debug window
 		/*
@@ -75,15 +80,16 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	 */
 	@Override
 	public void updateState(HunterPercept percept, HunterActionEffect actionEffect) {
-
+		System.out.println("--- START STEP (Update now) ---");
 //		this.percept = (HunterPercept) percept;
 
 		if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
-			 // 
+			
 			Vector2 startPos = new Vector2(18, 18);
 			this.hunterPos = new Vector2(startPos.getX(), startPos.getY());
 			this.hunterDir = startInfo.getAgentDirection();
-			this.wasTurn = false;
+			this.nextHunterDir = this.hunterDir;
+//			this.wasTurn = false;
 //			stenchRadar = percept.getWumpusStenchRadar();
 			this.state = new State(this.currView, startPos, this.startInfo, this.hunterPos);
 			
@@ -94,6 +100,9 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.wasScream = false;
 			
 			this.initDone = true;
+			
+			this.isTurning = false;
+			this.nextActionListPos = new Stack<>();
 		}
 
         if(actionEffect == HunterActionEffect.GAME_OVER) {
@@ -101,6 +110,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         }
 
         // Here must be the wall so set it in state
+        // reset search!
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
         	System.out.println("DEBUG: Bumped into wall!");
         	Tile n = null;
@@ -126,6 +136,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         			System.out.println("ERROR: Direction dosn't exist!");
         	}
         	n.setTileType(TileType.WALL);
+        	
+        	search = null;
         }
 
          if(actionEffect == HunterActionEffect.BUMPED_INTO_HUNTER) {
@@ -138,8 +150,9 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 System.out.println("DEBUG: Movement successful");
         	 
         	 // Ignore pos change if last update was just a turn
-        	 //TODO: Wumpus moves\rumbles  here too?
-        	 if(!this.wasTurn) {
+        	 // TODO: Wumpus moves\rumbles  here too?
+        	 // TODO: wasTurn new var with isTurning
+        	 if(!this.isTurning) {
         		 // Update Hunter postition
         		 switch(this.hunterDir) {
         		 case NORTH:
@@ -158,9 +171,6 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         			 System.out.println("ERROR: Direction dosn't exist?");
         			 break;
         		 }
-        	 } else {
-        		 // reset the turn bool
-        		 this.wasTurn = false;
         	 }
          }
 
@@ -182,12 +192,12 @@ public class MyWumpusAgent extends WumpusHunterAgent {
          
 //		stenchRadar = this.percept.getWumpusStenchRadar();
 		
-		System.out.println("update now");
+		System.out.println("DEBUG: Update now own state");
 		this.state.update(hunterPos, percept);
 		
 		this.actionEffect = actionEffect;
 		System.out.println(this.state.toStringPossible());
-		System.out.println("");
+//		System.out.println(this.state.toStringKnown());
 	}
 
 	/**
@@ -207,57 +217,42 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		
 		// if game init isn't done do NOTHING 
 		if(!this.initDone) {
-			System.out.println("--- END STEP (NO action) ---");
-			return nextAction;
-		}
-			
-		if(this.goalGold) {
-			if(this.search == null)
-				this.search = new Search(new GoalGold(1), new SearchValues(), this.state);
-			//TODO dafuq - class ATT - brainstorming
-			Node goalNode = this.search.start(hunterPos);
-			System.out.println("Search found something: " + goalNode.toString());		
-		} else if (this.goalLocation) {
-			
+			System.out.println("--- END STEP (NO/SIT action) ---\n");
+			return HunterAction.SIT; // TODO: Untested!
 		}
 		
-		if(this.goalKill) {
-			// TODO
-		}
+		checkGoal();
 		
 		if(this.wasScream) {
 			// TODO
 		}
 		
-		/*
-        if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
-			 this.nextAction = HunterAction.TURN_RIGHT;    
-			 this.wasTurn = true;
-			 switch(this.hunterDir) {
-			 	case NORTH:
-			 		this.hunterDir = Direction.EAST;
-			 		break;
-			 	case EAST:
-			 		this.hunterDir = Direction.SOUTH;
-			 		break;
-			 	case SOUTH:
-			 		this.hunterDir = Direction.WEST;
-			 		break;
-			 	case WEST:
-			 		this.hunterDir = Direction.NORTH;
-			 		break;
-			 	default:
-			 		System.out.println("ERROR: Direction dosn't exist?");
-			     	 break;
-			 }
-        } else {
-        	this.nextAction = HunterAction.GO_FORWARD;
-        }
+		// exit action() if it has to turn
+		// TODO: possible problems if wumpus moved!!!
+		turnToNextDir(); // End the turn ignore other actions
+		if(this.isTurning) {
+			System.out.println("Turning");
+			return this.nextAction;
+		} else {
+			if(!this.nextActionListPos.isEmpty()) {
+				goToNextTile(this.nextActionListPos.pop());
+				turnToNextDir();
+			} else {
+//				throw new IllegalStateException("ERROR: No action for this step!");
+				this.search = null;
+				checkGoal();
+			}
+			
+			if(!this.isTurning && this.search != null) {
+				this.nextAction = HunterAction.GO_FORWARD;
+				System.out.println("No turning go forward");
+			}
+		}
+		
 		
 		if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
 			
         }
-		*/
 		
 		/*
 		 * TODO: 1. Go to EAST till wall and then go down... With this we have
@@ -273,9 +268,107 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		 *		 - Go away if stench to strong
 		 *			-> but good shoot spot 
 		 */
-
 		
-		System.out.println("--- END STEP (action now) ---");
+		System.out.println("--- END STEP (action now SERVER) ---\n");
 		return nextAction;
+	}
+	
+	private void checkGoal() {
+		if(this.goalGold) {
+			if(this.search == null) {
+				this.search = new Search(new GoalGold(1), new SearchValues(), this.state);
+				Node iNode = this.search.start(hunterPos);
+				System.out.println("Hunter Pos is: " + this.hunterPos.toString());
+				System.out.println("Search found something: " + iNode);		
+				if(this.nextActionListPos == null) this.nextActionListPos = new Stack<>();
+				while(iNode != null) {
+					this.nextActionListPos.push(iNode.getTile().getPosVector());
+					iNode = iNode.getParentNode();
+				}
+				this.nextActionListPos.pop(); // last one is root (hunterpos)
+			}
+		}
+		
+		if(this.goalKill) {
+			// TODO
+		}
+	}
+	
+	/*
+	 * Methode is only to move one tile!
+	 */
+	private void goToNextTile(final Vector2 pos) {
+		System.out.println("call goToNextTile methode");
+		if(this.hunterPos.equals(pos)) {
+			System.out.println("hunterPos: " + this.hunterPos +
+					" and goToPos: " + pos + " - is equal -> return;");
+			return;
+		}
+		
+		System.out.print("Go to pos: " + pos + " ");
+		if(this.hunterPos.getX() > pos.getX()) {
+			this.nextHunterDir = Direction.WEST;
+			System.out.println("WEST");
+			return; // move first x axis
+		} else if(this.hunterPos.getX() < pos.getX()) {
+			this.nextHunterDir = Direction.EAST;
+			System.out.println("EAST");
+			return; // move first x axis
+		}
+		
+		if(this.hunterPos.getY() > pos.getY()) {
+			this.nextHunterDir = Direction.NORTH;
+			System.out.println("NORTH");
+		} else if(this.hunterPos.getY() < pos.getY()) {
+			this.nextHunterDir = Direction.SOUTH;
+			System.out.println("SOUTH");
+		}
+	}
+	
+	//TODO: Untested!
+	/*
+	 * @return true if dir is wrong
+	 */
+	private void turnToNextDir() {
+		if(this.hunterDir != this.nextHunterDir) {
+			if(this.hunterDir == Direction.NORTH) {
+				if(this.nextHunterDir == Direction.WEST) {
+					this.nextAction = HunterAction.TURN_LEFT;
+					this.hunterDir = Direction.WEST;
+				} else {
+					this.nextAction = HunterAction.TURN_RIGHT;
+					this.hunterDir = Direction.EAST;
+				}
+			} else if(this.hunterDir == Direction.EAST) {
+				if(this.nextHunterDir == Direction.NORTH) {
+					this.nextAction = HunterAction.TURN_LEFT;
+					this.hunterDir = Direction.NORTH;
+				} else {
+					this.nextAction = HunterAction.TURN_RIGHT;
+					this.hunterDir = Direction.SOUTH;
+				}
+			} else if(this.hunterDir == Direction.SOUTH) {
+				if(this.nextHunterDir == Direction.EAST) {
+					this.nextAction = HunterAction.TURN_LEFT;
+					this.hunterDir = Direction.EAST;
+				} else {
+					this.nextAction = HunterAction.TURN_RIGHT;
+					this.hunterDir = Direction.WEST;
+				}
+			} else if(this.hunterDir == Direction.WEST) {
+				if(this.nextHunterDir == Direction.SOUTH) {
+					this.nextAction = HunterAction.TURN_LEFT;
+					this.hunterDir = Direction.SOUTH;
+				} else {
+					this.nextAction = HunterAction.TURN_RIGHT;
+					this.hunterDir = Direction.NORTH;
+				}
+			}
+			this.isTurning = true;
+			System.out.println("isTurning set to TRUE");
+		} else {
+			this.isTurning = false;
+			System.out.println("isTurning set to FALSE");
+		}
 	}
 }
