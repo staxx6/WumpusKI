@@ -47,8 +47,8 @@ public class Search {
 				return expansionCandidate;
 			} else {
 				expandNode(expansionCandidate);
-				System.out.println("Open: " + this.openList.size());
-				System.out.println("Closed: " + this.closedList.size());
+//				System.out.println("Open: " + this.openList.size());
+//				System.out.println("Closed: " + this.closedList.size());
 			}
 		}
 //		return null;
@@ -58,10 +58,10 @@ public class Search {
 		throw new NullPointerException("Couldn't find any goal node!");
 	}
 	
+	/*
+	 * Expand the node. It prefers the north node
+	 */
 	private void expandNode(final Node previewNode) {
-		
-		// Go direction - other order looks better 
-		// if it starts with NORTH
 		Direction dir[];
 		dir = Direction.values();
 		for(int i = 3; i >= 0; i-- ) {
@@ -72,10 +72,6 @@ public class Search {
 			// Ignore walls and pits
 			// preview node cant be a wall or something
 			// make no sense @see PacmanSuche
-//			Tile newTile = this.state.getTile(newPos);
-//			if(newTile.getTileType() == TileType.WALL 
-//					|| newTile.getTileType() == TileType.PIT)
-//				return;
 			
 			Node successor = new Node(state.getTile(newPos), previewNode);
 			TileType sucType = successor.getTile().getTileType();
@@ -88,7 +84,6 @@ public class Search {
 			for(Node n : this.closedList) {
 				if(successor.equals(n)) {
 					continue;
-				} else {
 				}
 			}
 			

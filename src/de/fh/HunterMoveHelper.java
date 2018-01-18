@@ -25,10 +25,14 @@ public class HunterMoveHelper {
 	}
 	
 	public HunterAction moveTo(final Vector2 goToPos) {
+		System.out.println("call move to: " + goToPos);
 		nextDir(goToPos);
+		System.out.println("Next dir is: " + this.nextDir);
 		if(dir == nextDir) {
+			this.isTurning = false;
 			return HunterAction.GO_FORWARD;
 		} else {
+			this.isTurning = true;
 			return turnToDir();
 		}
 	}

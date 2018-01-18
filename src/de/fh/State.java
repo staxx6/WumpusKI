@@ -55,10 +55,6 @@ public class State {
 	 *TODO fix NPE // no NPE?
 	 */
 	public void update(final Vector2 pos, final HunterPercept percept) {
-		// If nothing - have to be empty or some action happens like hit by wumpus
-		// First statement:  EMPTY as long it's not overriden 
-		getTile(pos).setTileType(TileType.EMPTY);
-		
 		if(percept.isBump()) setPossibleTypeAround(pos, TileType.WALL);
 		if(percept.isBreeze()) {
 			setPossibleTypeAround(pos, TileType.PIT);
