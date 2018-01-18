@@ -151,7 +151,6 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 
         	 // Ignore pos change if last update was just a turn
         	 // TODO: Wumpus moves\rumbles  here too?
-        	 // TODO: wasTurn new var with isTurning
         	 if(!this.isTurning) {
         		 // Update Hunter postition
         		 switch(this.hunterDir) {
@@ -215,6 +214,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	@Override
 	public HunterAction action() {
 		
+		System.out.println("ActionListPos: " + this.nextActionListPos);
+		
 		// if game init isn't done do NOTHING 
 		if(!this.initDone) {
 			System.out.println("--- END STEP (NO/SIT action) ---\n");
@@ -229,13 +230,18 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		
 		// exit action() if it has to turn
 		// TODO: possible problems if wumpus moved!!!
+		// TODO: fix actionList pop()
 		turnToNextDir(); // End the turn ignore other actions
 		if(this.isTurning) {
 			System.out.println("Turning");
 			return this.nextAction;
 		} else {
+			if(this.hunterPos.equals(this.nextActionListPos.peek()) 
+					|| actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
+				this.nextActionListPos.pop();
+			}
 			if(!this.nextActionListPos.isEmpty()) {
-				goToNextTile(this.nextActionListPos.pop());
+				goToNextTile(this.nextActionListPos.peek());
 				turnToNextDir();
 			} else {
 //				throw new IllegalStateException("ERROR: No action for this step!");
@@ -250,9 +256,6 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		}
 		
 		
-		if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
-			
-        }
 		
 		/*
 		 * TODO: 1. Go to EAST till wall and then go down... With this we have
@@ -286,7 +289,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 					iNode = iNode.getParentNode();
 				}
 				this.nextActionListPos.pop(); // last one is root (hunterpos)
-			}
+				System.out.println("Created actionList: " + this.nextActionListPos);
+			} 
 		}
 		
 		if(this.goalKill) {
@@ -296,6 +300,9 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	
 	/*
 	 * Methode is only to move one tile!
+	 * 
+	 * Next tile can be only (should be...)  in one direction - 
+	 * direct neighbour 
 	 */
 	private void goToNextTile(final Vector2 pos) {
 		System.out.println("call goToNextTile methode");
@@ -305,63 +312,80 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			return;
 		}
 		
+		Direction nextDir = this.hunterDir;
+		
 		System.out.print("Go to pos: " + pos + " ");
+		
 		if(this.hunterPos.getX() > pos.getX()) {
-			this.nextHunterDir = Direction.WEST;
+			nextDir = Direction.WEST;
 			System.out.println("WEST");
-			return; // move first x axis
 		} else if(this.hunterPos.getX() < pos.getX()) {
-			this.nextHunterDir = Direction.EAST;
+			nextDir = Direction.EAST;
 			System.out.println("EAST");
-			return; // move first x axis
 		}
 		
 		if(this.hunterPos.getY() > pos.getY()) {
-			this.nextHunterDir = Direction.NORTH;
+			nextDir = Direction.NORTH;
 			System.out.println("NORTH");
 		} else if(this.hunterPos.getY() < pos.getY()) {
-			this.nextHunterDir = Direction.SOUTH;
+			nextDir = Direction.SOUTH;
 			System.out.println("SOUTH");
 		}
+		this.nextHunterDir = nextDir;
 	}
 	
 	//TODO: Untested!
 	/*
-	 * @return true if dir is wrong
+	 * This methode set the isTurn booolean and nextDir direction
+	 * 
+	 * Turn fastest way, e.g. if Hunter is looking NORTH and needs to
+	 * look WEST it should turn left and not right.
+	 * 
+	 * TODO: Possible better solution?
 	 */
 	private void turnToNextDir() {
+		System.out.println("call turnToNextDir curr hunterDir: " + this.hunterDir);
 		if(this.hunterDir != this.nextHunterDir) {
+			System.out.print("!should be: " + this.nextHunterDir);
 			if(this.hunterDir == Direction.NORTH) {
 				if(this.nextHunterDir == Direction.WEST) {
 					this.nextAction = HunterAction.TURN_LEFT;
 					this.hunterDir = Direction.WEST;
+					System.out.println(" turn LEFT hunterDir set to WEST");
 				} else {
 					this.nextAction = HunterAction.TURN_RIGHT;
 					this.hunterDir = Direction.EAST;
+					System.out.println(" turn RIGHT hunterDir set to EAST");
 				}
 			} else if(this.hunterDir == Direction.EAST) {
 				if(this.nextHunterDir == Direction.NORTH) {
 					this.nextAction = HunterAction.TURN_LEFT;
 					this.hunterDir = Direction.NORTH;
+					System.out.println(" turn LEFT hunterDir set to NORTH");
 				} else {
 					this.nextAction = HunterAction.TURN_RIGHT;
 					this.hunterDir = Direction.SOUTH;
+					System.out.println(" turn RIGHT hunterDir set to SOUTH");
 				}
 			} else if(this.hunterDir == Direction.SOUTH) {
 				if(this.nextHunterDir == Direction.EAST) {
 					this.nextAction = HunterAction.TURN_LEFT;
 					this.hunterDir = Direction.EAST;
+					System.out.println(" turn LEFT hunterDir set to EAST");
 				} else {
 					this.nextAction = HunterAction.TURN_RIGHT;
 					this.hunterDir = Direction.WEST;
+					System.out.println(" turn RIGHT hunterDir set to WEST");
 				}
 			} else if(this.hunterDir == Direction.WEST) {
 				if(this.nextHunterDir == Direction.SOUTH) {
 					this.nextAction = HunterAction.TURN_LEFT;
 					this.hunterDir = Direction.SOUTH;
+					System.out.println(" turn LEFT hunterDir set to SOUTH");
 				} else {
 					this.nextAction = HunterAction.TURN_RIGHT;
 					this.hunterDir = Direction.NORTH;
+					System.out.println(" turn RIGHT hunterDir set to NORTH");
 				}
 			}
 			this.isTurning = true;
