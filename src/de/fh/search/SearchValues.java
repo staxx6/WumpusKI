@@ -5,21 +5,32 @@ public class SearchValues {
 	private float wall;
 	private float pit;
 	private float wumpusDistanceFac;
+	private float unknown;
 	
 	/*
 	 * Create search values with standard values
 	 */
 	public SearchValues() {
 		this.wall = 0.5f;
-		this.pit = 10;
-		this.wumpusDistanceFac = 10;
+		this.pit = 10f;
+		this.wumpusDistanceFac = 10f;
+		this.unknown = 10f;
 	}
 	
 	public SearchValues(final float wall, final float pit, 
-			final float wumpusDistanceFac) {
+			final float wumpusDistanceFac, final float unknown) {
 		this.wall = wall;
 		this.pit = pit;
 		this.wumpusDistanceFac = wumpusDistanceFac;
+		this.unknown = unknown;
+	}
+	
+	public float getUnknown() {
+		return this.unknown;
+	}
+	
+	public void setUnknown(final float unknown) {
+		this.unknown = unknown;
 	}
 	
 	public float getWall() {

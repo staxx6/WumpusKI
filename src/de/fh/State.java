@@ -19,6 +19,7 @@ public class State {
 	private int stenchRadius;
 	
 	private List<List<Tile>> view;
+	private Vector2 currViewSizeLimit; // (x, y)
 	private Vector2 hunterPos;
 
 	public State(final Vector2 startPos, final WumpusStartInfo startInfo, 
@@ -29,7 +30,7 @@ public class State {
 		this.stenchRadius = startInfo.getStenchDistance();
 		
 		// Create Lists and fill it with null 
-		if(this.view == null) {
+		if(this.view == null) { // TODO: Not needed
  			this.view = new ArrayList<>();
  			for(int y = 0; y < startPos.getY() * 2; y++) {
  				this.view.add(new ArrayList<>());
@@ -38,6 +39,7 @@ public class State {
  				}
  			}
  		}
+		this.currViewSizeLimit = new Vector2(this.view.get(0).size(), this.view.size());
 	}
 	
 	/*
@@ -131,7 +133,9 @@ public class State {
 	 * @return tile
 	 */
 	public Tile getTile(final int x, final int y) {
+		
 		Tile n = this.view.get(y).get(x);
+		
 		if(n == null) {
 			n = new Tile(TileType.UNKNOWN, x, y);
 			this.view.get(y).set(x, n);
@@ -143,15 +147,17 @@ public class State {
 	 * Get a tile from position (Vector2 pos), if there
 	 * isn't a tile it creates a new one.
 	 * 
+	 * Tile n = this.view.get(pos.getY()).get(pos.getX()); BUGGED why ever
+	 * like now better
+	 * 
 	 * @return tile
 	 */
 	public Tile getTile(final Vector2 pos) {
-		Tile n = this.view.get(pos.getY()).get(pos.getX());
-		if(n == null) {
-			n = new Tile(TileType.UNKNOWN, pos);
-			this.view.get(pos.getY()).set(pos.getX(), n);
-		}
-		return n;
+		return getTile(pos.getX(), pos.getY());
+	}
+	
+	public Vector2 getCurrViewSizeLimit() {
+		return this.currViewSizeLimit;
 	}
 	
 	/*
@@ -220,14 +226,14 @@ public class State {
 						// shouldnt be ther something if is it unknown?
 						
 						// Possible empty if there was a wumpus
-						if(n.getPossibleTypes() != null) {
+//						if(n.getPossibleTypes() != null) {
 							s += "(";
 							for(TileType t : n.getPossibleTypes()) {
 								//if(t == null) break; //TODO need it by foreach?
 								s += t.getSymbol();
 							}
 							s += ")";
-						}
+//						}
 					} else {
 						s += " " + n.getTileType().getSymbol() + " ";
 					}

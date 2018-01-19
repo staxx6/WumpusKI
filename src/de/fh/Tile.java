@@ -23,13 +23,16 @@ public class Tile {
 	private Hashtable<Integer, Integer> wumpuse;
 	
 	public Tile(final TileType type, final Vector2 pos) {
+		System.out.println("Tile const got: " + pos);
 		this.type = type;
 		this.pos = pos;
+		this.possibleTypes = new HashSet<>();
 	}
 	
 	public Tile(final TileType type, final int x, final int y) {
 		this.type = type;
 		this.pos = new Vector2(x, y);
+		this.possibleTypes = new HashSet<>();
 	}
 	
 	/*
@@ -38,7 +41,7 @@ public class Tile {
 	 */
 	public void setTileType(final TileType type) {
 		this.type = type;
-		if(this.possibleTypes != null) this.possibleTypes.clear();
+		this.possibleTypes.clear();
 	}
 	
 	public TileType getTileType() {
@@ -84,14 +87,12 @@ public class Tile {
 	}
 	
 	public void addPossibleType(final TileType type) {
-		if(this.possibleTypes == null) this.possibleTypes = new HashSet<>();
 		if(this.type == TileType.UNKNOWN) 
 			this.possibleTypes.add(type);
 	}
 	
 	//TODO: Untested
 	public void removePossibleType(final TileType type) {
-		if(this.possibleTypes == null) return;
 		if(!this.possibleTypes.remove(type)) {
 			System.out.println("DEBUG: Couldn't remove possible tile type " + type 
 					+ " from tile: " + toString());
@@ -131,6 +132,10 @@ public class Tile {
 	public void removeAllWumpusIds() {
 		if(this.wumpuse != null)
 			this.wumpuse.clear();
+	}
+	
+	public String toString() {
+		return "Tile: type: " + this.type + " possible types: " + this.possibleTypes + " pos: " + this.pos;
 	}
 }
 

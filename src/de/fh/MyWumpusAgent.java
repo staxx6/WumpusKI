@@ -3,6 +3,7 @@ package de.fh;
 
 import de.fh.agent.WumpusHunterAgent;
 import de.fh.search.GoalGold;
+import de.fh.search.GoalLocation;
 import de.fh.search.Node;
 import de.fh.search.Search;
 import de.fh.search.SearchValues;
@@ -17,6 +18,7 @@ import java.util.Stack;
 public class MyWumpusAgent extends WumpusHunterAgent {
 
 	private State state;
+	private Vector2 hunterStartPos;
 	
 	private HunterMoveHelper moveHelper;
 	
@@ -25,7 +27,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private Search search; 
 	
 	private boolean wasScream;
-	private boolean goalGold, goalKill;
+	private boolean goalGold, goalKill, goalLocation;
 	
 	private Stack<Vector2> nextActionListPos;
 	
@@ -67,10 +69,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		
 		if(actionEffect == HunterActionEffect.GAME_INITIALIZED) {
 			
-			Vector2 startPos = new Vector2(18, 18);
-			this.moveHelper = new HunterMoveHelper(new Vector2(startPos.getX(), startPos.getY()),
-					startInfo.getAgentDirection());
-			this.state = new State(startPos, this.startInfo, this.moveHelper.getCurrentPos());
+			this.hunterStartPos = new Vector2(18, 18);
+			this.moveHelper = new HunterMoveHelper(new Vector2(this.hunterStartPos.getX(), 
+					this.hunterStartPos.getY()), startInfo.getAgentDirection());
+			this.state = new State(this.hunterStartPos, this.startInfo, this.moveHelper.getCurrentPos());
 	 		this.state.getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.EMPTY);
 			
 			this.goalGold = true; // first goal
@@ -115,7 +117,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	}
         	n.setTileType(TileType.WALL);
         	
-        	System.out.println("-> Search goal/location NOT found - new search");
+        	System.out.println("-> Search goal/location NOT found - new SEARCH: ");
         	newSearch();
         }
 
@@ -125,26 +127,40 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 //or other hunter bumped to this hunter?
         	 System.out.println("DEBUG: Bumped into HUNTER!");
          }
+         
+         if(percept.isBreeze()) {
+        	 // TODO!!!1111
+        	 newSearch();
+         }
 
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
         	 System.out.println("DEBUG: Movement SUCCESSFUL");
         	 
-        	this.moveHelper.updatePos();
+        	 this.moveHelper.updatePos();
         	 
-      		this.state.getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.EMPTY);
+        	 this.state.getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.EMPTY);
+        	 
+        	 if(percept.isGlitter()) {
+        		 System.out.println("DEBUG: GOLD found!");
+        		 this.goalGold = false;
+        		 this.goalLocation = true;
+        		 newSearch();
+        	 }
         	 
         	 if(this.moveHelper.getCurrentPos().equals(this.nextActionListPos.peek())) {
         		 this.nextActionListPos.pop();
         		 if(this.nextActionListPos.isEmpty()) {
         			 System.out.println("Search goal/location found!");
-        			 newSearch();
+        			 if(this.goalLocation && this.moveHelper.getCurrentPos().equals(this.hunterStartPos)) {
+        				 System.out.println("########### Game finished! ###########");
+        			 } else {
+        				 newSearch();
+        			 }
         		 }
         	 }
          }
 
-         if(actionEffect == HunterActionEffect.GOLD_FOUND) {
-        	 System.out.println("DEBUG: Collected GOLD!");
-         }
+     
 
          if(actionEffect == HunterActionEffect.WUMPUS_KILLED) {
         	 System.out.println("DEBUG: Wumpus KILLED!");
@@ -183,17 +199,17 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	 */
 	@Override
 	public HunterAction action() {
-		
-		System.out.println("ActionListPos: " + this.nextActionListPos);
+		System.out.println("--- START action --- ActionListPos: " + this.nextActionListPos);
 		
 		// if game init isn't done do NOTHING 
 		if(!this.initDone) {
-			System.out.println("DEBUG: Init NOT done!");
+			System.out.println("--- END STEP (action [SIT] now SERVER) init NOT done ---\n");
 			return HunterAction.SIT;
 		}
 		
 		if(this.state.getHunterTile().getTileType() == TileType.GOLD) {
-			// TODO: Well, do other stuff
+			System.out.println("--- END STEP (action [GRAB] now SERVER) gold FOUND ---\n");
+			this.state.getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.EMPTY);
 			return HunterAction.GRAB;
 		}
 		
@@ -204,7 +220,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		if(!this.nextActionListPos.isEmpty()) {
 			this.nextAction = this.moveHelper.moveTo(this.nextActionListPos.peek());
 		} else {
-			throw new IllegalStateException("ERROR: ActionList is empty! Should not be possible here.");
+			throw new IllegalStateException("ERROR: ActionList is empty! Should not be possible here "
+					+ "OR Game finished!");
 		}
 		
 		System.out.println("--- END STEP (action [" + nextAction + "] now SERVER) ---\n");
@@ -215,7 +232,12 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		this.search = null;
 		this.nextActionListPos.clear();
 		
+		if(this.goalKill) {
+			// TODO
+		}
+		
 		if(this.goalGold) {
+			System.out.println("Start goalGold search");
 			this.search = new Search(new GoalGold(20), new SearchValues(), this.state);
 			Node iNode = this.search.start(this.moveHelper.getCurrentPos());
 			
@@ -226,11 +248,23 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 				iNode = iNode.getParentNode();
 			}
 			this.nextActionListPos.pop(); // last one is root (hunterpos)
-			System.out.println("Created actionList: " + this.nextActionListPos);
+			System.out.println("-> Created actionList: " + this.nextActionListPos);
 		}
 		
-		if(this.goalKill) {
-			// TODO
+		if(this.goalLocation) {
+			System.out.println("Start goalLocation search");
+			this.search = new Search(new GoalLocation(this.hunterStartPos, 0), new SearchValues(0.5f, 10, 10, 10), 
+					this.state);
+			Node iNode = this.search.start(this.moveHelper.getCurrentPos());
+			
+			System.out.println("Loc. search found something: " + iNode);
+			
+			while(iNode != null) {
+				this.nextActionListPos.push(iNode.getTile().getPosVector());
+				iNode = iNode.getParentNode();
+			}
+			this.nextActionListPos.pop(); // last one is root (hunterpos)
+			System.out.println("-> Created actionList: " + this.nextActionListPos);
 		}
 	}
 }

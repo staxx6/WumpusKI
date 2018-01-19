@@ -4,9 +4,8 @@ import de.fh.TileType;
 
 
 /*
- * TODO: Untested
- * 
  * This gloal looks for a unknown tile which is close to the hunter  
+ * -> It dosn't look directly for gold!
  */
 public class GoalGold extends Goal {
 
