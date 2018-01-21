@@ -6,10 +6,16 @@ import de.fh.util.Vector2;
 public class GoalLocation extends Goal {
 	
 	private Vector2 pos;
+	private boolean checkWallsExtra;
 	
-	public GoalLocation(final Vector2 pos, final float riskTolerance) {
+	public GoalLocation(final Vector2 pos, final float riskTolerance, final boolean checkWallsExtra) {
 		super(riskTolerance);
 		this.pos = pos;
+		this.checkWallsExtra = checkWallsExtra;
+		
+		this.useRisk = true;
+		this.usePathCost = true;
+		this.useDistanceCost = true;
 	}
 	
 	/*
@@ -17,15 +23,12 @@ public class GoalLocation extends Goal {
 	 */
 	@Override
 	public boolean isNodeGoal(final Node node) {
-//		System.out.println("Check: " + node.getTile().getPosVector() + " == " + this.pos);
 		if(node.getTile().getPosVector().equals(this.pos)) {
-//			System.out.println("true!");
 			return true;
-		} else {
+		} else if(this.checkWallsExtra) {
 			if(node.getTile().getPossibleTypes().contains(TileType.WALL)) {
 				return true;
 			}
-//			System.out.println("false!");
 		}
 		return false;
 	}

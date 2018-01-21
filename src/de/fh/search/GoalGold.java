@@ -11,6 +11,10 @@ public class GoalGold extends Goal {
 
 	public GoalGold(final float riskTolerance) {
 		super(riskTolerance);
+		
+		this.useRisk = true;
+		this.usePathCost = true;
+		this.useDistanceCost = false;
 	}
 	
 	/*

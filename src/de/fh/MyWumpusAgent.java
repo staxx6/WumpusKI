@@ -2,6 +2,7 @@ package de.fh;
 
 
 import de.fh.agent.WumpusHunterAgent;
+import de.fh.search.Goal;
 import de.fh.search.GoalGold;
 import de.fh.search.GoalLocation;
 import de.fh.search.Node;
@@ -229,42 +230,39 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	}
 	
 	private void newSearch() {
-		this.search = null;
 		this.nextActionListPos.clear();
+		
+		Goal goal = null;
+		SearchValues searchValues = null;
+		
+		if(this.goalGold) {
+			System.out.println("# Start goalGold search:");
+			goal = new GoalGold(20);
+			searchValues = new SearchValues();
+		}
+		
+		if(this.goalLocation) {
+			System.out.println("# Start goalLocation search:");
+			goal = new GoalLocation(this.hunterStartPos, 0, false);
+			searchValues = new SearchValues();
+		}
 		
 		if(this.goalKill) {
 			// TODO
 		}
 		
-		if(this.goalGold) {
-			System.out.println("Start goalGold search");
-			this.search = new Search(new GoalGold(20), new SearchValues(), this.state);
-			Node iNode = this.search.start(this.moveHelper.getCurrentPos());
-			
-			System.out.println("Search found something: " + iNode);
-			
-			while(iNode != null) {
-				this.nextActionListPos.push(iNode.getTile().getPosVector());
-				iNode = iNode.getParentNode();
-			}
-			this.nextActionListPos.pop(); // last one is root (hunterpos)
-			System.out.println("-> Created actionList: " + this.nextActionListPos);
-		}
+		// ------ Search START -----
+		this.search = new Search(goal, searchValues, this.state);
+		Node iNode = this.search.start(this.moveHelper.getCurrentPos());
+		System.out.println(" -> Search found something: " + iNode);
 		
-		if(this.goalLocation) {
-			System.out.println("Start goalLocation search");
-			this.search = new Search(new GoalLocation(this.hunterStartPos, 0), new SearchValues(0.5f, 10, 10, 10), 
-					this.state);
-			Node iNode = this.search.start(this.moveHelper.getCurrentPos());
-			
-			System.out.println("Loc. search found something: " + iNode);
-			
-			while(iNode != null) {
-				this.nextActionListPos.push(iNode.getTile().getPosVector());
-				iNode = iNode.getParentNode();
-			}
-			this.nextActionListPos.pop(); // last one is root (hunterpos)
-			System.out.println("-> Created actionList: " + this.nextActionListPos);
+		
+		while(iNode != null) {
+			this.nextActionListPos.push(iNode.getTile().getPosVector());
+			iNode = iNode.getParentNode();
 		}
+		this.nextActionListPos.pop(); // last one is root (hunterpos)
+		System.out.println("-> Created actionList: " + this.nextActionListPos);
+		// ------ Search END -----
 	}
 }

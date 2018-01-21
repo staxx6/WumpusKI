@@ -14,7 +14,7 @@ public class SearchValues {
 		this.wall = 0.5f;
 		this.pit = 10f;
 		this.wumpusDistanceFac = 10f;
-		this.unknown = 10f;
+		this.unknown = 100f;
 	}
 	
 	public SearchValues(final float wall, final float pit, 

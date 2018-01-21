@@ -60,18 +60,22 @@ public class Search {
 	 * Expand the node. It prefers the north node
 	 */
 	private void expandNode(final Node previewNode) {
+		System.out.println("@expandNode (" + previewNode.getTile().getPosVector() + "): ");
 		Direction dir[];
 		dir = Direction.values();
 		for(int i = 3; i >= 0; i-- ) {
 			
 			Vector2 newPos = calcNewPos(previewNode.getTile().getPosVector(),
 					dir[i]);
+			System.out.print("Pos " + newPos + " got: ");
 			
 			// TODO: Missing checks for lower postions
+			// TODO: Problem with the list
 			if(newPos.getX() > this.state.getCurrViewSizeLimit().getX() 
 					|| newPos.getY() > this.state.getCurrViewSizeLimit().getY()
 						|| false
 							|| false) {
+				System.out.println("OUT (out of level/array limits)");
 				continue;
 			}
 			
@@ -79,23 +83,27 @@ public class Search {
 			// preview node cant be a wall or something
 			// make no sense @see PacmanSuche
 			
-			Tile tile = state.getTile(newPos);
-//			Node successor = new Node(state.getTile(newPos), previewNode);
-			Node successor = new Node(tile, previewNode);
+			Node successor = new Node(state.getTile(newPos), previewNode);
 			TileType sucType = successor.getTile().getTileType();
 			
 			if(sucType == TileType.WALL || sucType == TileType.PIT) {
 				this.closedList.add(successor);
+				System.out.println("OUT (wall/pit)");
+				break;
+			}
+			
+//			for(Node n : this.closedList) {
+//				if(successor.equals(n)) {
+//					System.out.println("OUT (in closed)");
+//					break;
+//				}
+//			}
+			if(this.closedList.contains(successor)) {
 				continue;
 			}
 			
-			for(Node n : this.closedList) {
-				if(successor.equals(n)) {
-					continue;
-				}
-			}
-			
 			evaluateNode(successor);
+			System.out.print("[" + successor.getValue() + "]");
 			addNode(successor);
 		}
 	}
@@ -116,50 +124,49 @@ public class Search {
 		return pos;
 	}
 	
-	// TODO: Risk tolerance bad like this, its with pathCost // is it?
 	// Evaluate node value with A*-Algo
 	private void evaluateNode(final Node expansionCandidate) {
 		Tile tile = expansionCandidate.getTile();
 		NodeValue nodeValue = expansionCandidate.getValue();
-		float risk = 0;
 		
-		if(tile.getTileType() == TileType.UNKNOWN) {
-//			if(tile.getPossibleTypes() != null) {
+		float risk = 0;
+		float pathCost = 0;
+		float distanceCost = 0;
+		
+		if(this.goal.useRisk) {
+			if(tile.getTileType() == TileType.UNKNOWN) {
 				for(TileType type : tile.getPossibleTypes()) {
 					if(type == TileType.WALL) risk += this.searchValues.getWall();
 					else if(type == TileType.PIT) risk += this.searchValues.getPit();
 				}
-//			}
-		}
-		// risk unchanged if type empty = 0
-		
-		if(tile.getWumpusIds() != null && !tile.getWumpusIds().isEmpty()) {
-			for(int id : tile.getWumpusIds()) {
-				risk += this.searchValues.getWumpusDistanceFac() 
-						/ tile.getWumpusDistance(id);
+			}
+			
+			if(tile.getWumpusIds() != null && !tile.getWumpusIds().isEmpty()) {
+				for(int id : tile.getWumpusIds()) {
+					risk += this.searchValues.getWumpusDistanceFac() 
+							/ tile.getWumpusDistance(id);
+				}
 			}
 		}
 		
-		//TODO: calc path cost
-		float pathCost = nodeValue.getPathCost() 
-				+ expansionCandidate.getParentNode().getValue().getPathCost() 
-					+ 1;
-		nodeValue.setPathCost(pathCost);
+		if(this.goal.usePathCost) {
+			pathCost = nodeValue.getPathCost() 
+					+ expansionCandidate.getParentNode().getValue().getPathCost() + 1;
+		}
 		
-		float distanceCost = 0;
-		//TODO: shiiiit
-		if(this.goal instanceof GoalLocation) {
-			// Manhattan distance
-			Vector2 goalLoc = ((GoalLocation) this.goal).getLocation();
-	        distanceCost = Math.abs(goalLoc.getX() - expansionCandidate.getTile().getPosX()) 
-	        		+ Math.abs(goalLoc.getY() - expansionCandidate.getTile().getPosY());
-	        nodeValue.setPathCost(distanceCost); // Overwrite
-	        
-	        if(tile.getTileType() == TileType.UNKNOWN) {
-	        	risk += this.searchValues.getUnknown();
-	        }
-		}		
+		if(this.goal.useDistanceCost) {
+			Vector2 goalLoc = ((GoalLocation) this.goal).getLocation(); // TODO: Dont like this cast here 
+			distanceCost = Math.abs(goalLoc.getX() - expansionCandidate.getTile().getPosX()) 
+					+ Math.abs(goalLoc.getY() - expansionCandidate.getTile().getPosY());
+			
+			if(tile.getTileType() == TileType.UNKNOWN) {
+				pathCost += this.searchValues.getUnknown();
+			}
+		}
+		
 		nodeValue.setRisk(risk);
+		nodeValue.setPathCost(pathCost);
+		nodeValue.setDistanceCost(distanceCost);
 	}
 	
 	// Insert the node to openList, value priority (from A*-Algo)
@@ -167,20 +174,20 @@ public class Search {
 		if(expansionCandidate.getValue().getRisk() 
 				> goal.getRiskTolerance()) {
 			this.closedList.add(expansionCandidate);
+			System.out.println(" OUT (risk too high)");
 			return;
 		}
 		
 		int newIndex = 0;
 		for(Node n : this.openList) {
-			// TODO not A*
-			if(n.getValue().get() < expansionCandidate.getValue().get()) {
-//			if(n.getValue().get() < expansionCandidate.getValue().getPathCost()) {
+			if(n.getValue().getAstar() < expansionCandidate.getValue().getAstar()) {
 				newIndex++;
 			} else {
 				break;
 			}
 		}
 		this.openList.add(newIndex, expansionCandidate);
+		System.out.println(" placed in openList index: " + newIndex);
 	}
 }
 

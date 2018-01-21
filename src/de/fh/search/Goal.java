@@ -6,6 +6,10 @@ public abstract class Goal {
 	// A bigger number means more risk
 	protected float riskTolerance;
 	
+	protected boolean useRisk;
+	protected boolean usePathCost;
+	protected boolean useDistanceCost;
+	
 	protected Goal(final float risk) {
 		this.riskTolerance = risk;
 	}
@@ -18,4 +22,16 @@ public abstract class Goal {
 	 * Check if Node is the goal for the search
 	 */
 	abstract protected boolean isNodeGoal(final Node node);
+	
+	public boolean useRisk() {
+		return this.useRisk;
+	}
+	
+	public boolean usePathCost() {
+		return this.usePathCost;
+	}
+	
+	public boolean useDistanceCost() {
+		return this.useDistanceCost;
+	}
 }
