@@ -8,6 +8,7 @@ import de.fh.wumpus.HunterPercept;
 import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
 import javafx.application.Application;
+import javafx.application.Platform;
 
 import java.util.Hashtable;
 import java.util.List;
@@ -27,10 +28,12 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private State state;
 	private Vector2 hunterPos;
 	private Direction hunterDir;
+	private static ViewWindow viewWindow;
 	
 	private boolean wasTurn;
 	
 	public static void main(String[] args) {
+		
 		
 		// Start a new thread for the debug window
 		new Thread(){
@@ -39,7 +42,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 				javafx.application.Application.launch(ViewWindow.class);
 			}
 		}.start();
-		ViewWindow viewWindow = ViewWindow.waitForViewWindow();
+		viewWindow = ViewWindow.waitForViewWindow();
 		
 		MyWumpusAgent agent = new MyWumpusAgent("");
 		MyWumpusAgent.start(agent,"127.0.0.1", 5000);
@@ -48,6 +51,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	public MyWumpusAgent(String name) {
 
 		super(name);
+	}
+	
+	public State getState() {
+		return state;
 	}
 
 	/**
@@ -74,10 +81,22 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.wasTurn = false;
 //			stenchRadar = percept.getWumpusStenchRadar();
 			this.state = new State(this.currView, startPos, this.startInfo, this.hunterPos);
+			Platform.runLater(() -> {
+				viewWindow.update(state);
+			});
 		}
+		
+		
 
         if(actionEffect == HunterActionEffect.GAME_OVER) {
-        	System.out.println("DEBUG: Game Over!");         	
+        	System.out.println("DEBUG: Game Over!");  
+        	// TODO WAIT
+        	try {
+				Thread.currentThread().wait(5000);
+			} catch (InterruptedException e) {
+				System.out.println("Du bist tod! Warte ein bisschen!");
+				e.printStackTrace();
+			}
         }
 
         // Here must be the wall so set it in state
@@ -156,10 +175,14 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 System.out.println("DEBUG: No more arrows!");
          }
 		
-		stenchRadar = this.percept.getWumpusStenchRadar();
+		// stenchRadar = this.percept.getWumpusStenchRadar();
 		
 		System.out.println("update now");
 		this.state.update(hunterPos, percept);
+		// TODO UpdateView
+		Platform.runLater(() -> {
+			viewWindow.update(state);
+		});
 		
 		this.actionEffect = actionEffect;
 		System.out.println(this.state.toStringPossible());
