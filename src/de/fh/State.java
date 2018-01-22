@@ -61,6 +61,8 @@ public class State {
 		if(percept.isBreeze()) {
 			setPossibleTypeAround(pos, TileType.PIT);
 			getTile(pos).setBreeze(true);
+		} else {
+			removePossibleTypeAround(pos, TileType.PIT);
 		}
 		
 		// If wumpus percept is empty remove alle wumpus around hunter withhin stench distance
@@ -108,13 +110,36 @@ public class State {
 		int y = pos.getY();
 		
 		//North
-		getTile(x, (y - 1)).addPossibleType(type);
+		if(!getTile(x, (y - 1)).getPossibleTypes().contains(TileType.getCounterPart(type)))
+			getTile(x, (y - 1)).addPossibleType(type);
 		//East
-		getTile((x + 1), y).addPossibleType(type);
+		if(!getTile((x + 1), y).getPossibleTypes().contains(TileType.getCounterPart(type)))
+			getTile((x + 1), y).addPossibleType(type);
 		//South
-		getTile(x, (y + 1)).addPossibleType(type);
+		if(!getTile(x, (y + 1)).getPossibleTypes().contains(TileType.getCounterPart(type)))
+			getTile(x, (y + 1)).addPossibleType(type);
 		//West
-		getTile((x - 1), y).addPossibleType(type);
+		if(!getTile((x - 1), y).getPossibleTypes().contains(TileType.getCounterPart(type)))
+			getTile((x - 1), y).addPossibleType(type);
+	}
+	
+	// TODO: Test with set shoud be only one possible type
+	private void removePossibleTypeAround(final Vector2 pos, final TileType type) {
+		int x = pos.getX();
+		int y = pos.getY();
+		
+		//North
+		getTile(x, (y - 1)).removePossibleType(type);
+		getTile(x, (y - 1)).addPossibleType(TileType.getCounterPart(type));
+		//East
+		getTile((x + 1), y).removePossibleType(type);
+		getTile((x + 1), y).addPossibleType(TileType.getCounterPart(type));
+		//South
+		getTile(x, (y + 1)).removePossibleType(type);
+		getTile(x, (y + 1)).addPossibleType(TileType.getCounterPart(type));
+		//West
+		getTile((x - 1), y).removePossibleType(type);
+		getTile((x - 1), y).addPossibleType(TileType.getCounterPart(type));
 	}
 	
 	/*

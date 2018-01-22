@@ -63,7 +63,7 @@ public class Search {
 		System.out.println("@expandNode (" + previewNode.getTile().getPosVector() + "): ");
 		Direction dir[];
 		dir = Direction.values();
-		for(int i = 3; i >= 0; i-- ) {
+		for(int i = 3; i >= 0; i--) {
 			
 			Vector2 newPos = calcNewPos(previewNode.getTile().getPosVector(),
 					dir[i]);
@@ -89,7 +89,7 @@ public class Search {
 			if(sucType == TileType.WALL || sucType == TileType.PIT) {
 				this.closedList.add(successor);
 				System.out.println("OUT (wall/pit)");
-				break;
+				continue;
 			}
 			
 //			for(Node n : this.closedList) {
@@ -99,6 +99,7 @@ public class Search {
 //				}
 //			}
 			if(this.closedList.contains(successor)) {
+				System.out.println("OUT (is already in closedList)");
 				continue;
 			}
 			

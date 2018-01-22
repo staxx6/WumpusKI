@@ -77,7 +77,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	 		this.state.getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.EMPTY);
 			
 			this.goalGold = true; // first goal
-			this.goalKill = false;
+			this.goalKill = false; // TODO: should be always true if there are still arrows
+			this.goalLocation = false;
 			
 			this.wasScream = false;
 			
@@ -128,11 +129,6 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         	 //or other hunter bumped to this hunter?
         	 System.out.println("DEBUG: Bumped into HUNTER!");
          }
-         
-         if(percept.isBreeze()) {
-        	 // TODO!!!1111
-        	 newSearch();
-         }
 
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
         	 System.out.println("DEBUG: Movement SUCCESSFUL");
@@ -177,6 +173,11 @@ public class MyWumpusAgent extends WumpusHunterAgent {
          
 		System.out.println("DEBUG: Update now own state");
 		this.state.update(this.moveHelper.getCurrentPos(), percept);
+		
+		// Set the pits around breeze is in state.class done
+        if(percept.isBreeze()) {
+        	newSearch();
+        }
 		
 		if(this.search == null) {
 			newSearch();
@@ -237,7 +238,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		
 		if(this.goalGold) {
 			System.out.println("# Start goalGold search:");
-			goal = new GoalGold(20);
+			goal = new GoalGold(9);
 			searchValues = new SearchValues();
 		}
 		
