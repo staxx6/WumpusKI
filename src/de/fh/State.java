@@ -1,6 +1,7 @@
 package de.fh;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -52,9 +53,6 @@ public class State {
 	 * 
 	 * @param pos hunter position
 	 * @param percept current percept from the hunter agent
-	 *
-	 *
-	 *TODO fix NPE // no NPE?
 	 */
 	public void update(final Vector2 pos, final HunterPercept percept) {
 		if(percept.isBump()) setPossibleTypeAround(pos, TileType.WALL);
@@ -64,45 +62,106 @@ public class State {
 		} else {
 			removePossibleTypeAround(pos, TileType.PIT);
 		}
+		if(percept.isGlitter()) getTile(pos).setTileType(TileType.GOLD);
 		
-		// If wumpus percept is empty remove alle wumpus around hunter withhin stench distance
-		if(percept.getWumpusStenchRadar().isEmpty()) {
-			//System.out.println("EMPTY");
-			for(List<Tile> l : this.view) {
-				for(Tile n : l) {
-					if(n == null) continue;
-					//Manhatten distance
-					int distance =  Math.abs(pos.getX() - n.getPosX()) 
-			        		+ Math.abs(pos.getY() - n.getPosY());
-					if(distance <= startInfo.getStenchDistance())
-						//TODO: It removes something it shouldn't  NOPE?
-						n.removeAllWumpusIds();
-				}
+		
+		
+		removeWumpusAll();
+		updateWumpus(percept, pos);
+		if(pos.getX() == 20 && pos.getY() == 18) {
+			System.out.println("as");;
+		}
+	}
+	
+	private void removeWumpusAll() {
+		for(int y = 0; y < this.view.size(); y++) {
+			for(int x = 0; x < this.view.get(0).size(); x++) {
+				Tile t = this.view.get(y).get(x);
+				if(t != null && t.getWumpuse() != null)
+					t.getWumpuse().clear();
 			}
-		// TODO: if the wumpus dosn*t move it can't be on a old place where
-		// the hunter was
-		} else {
-			// TODO: Dont know if right key<->Value // key=id
+		}
+	}
+	
+	private void updateWumpus(final HunterPercept percept, final Vector2 pos) {
+		// If wumpus percept is empty remove alle wumpus around hunter within stench distance
+//		if(percept.getWumpusStenchRadar().isEmpty()) {
+//			for(List<Tile> l : this.view) {
+//				for(Tile n : l) {
+//					if(n == null) continue;
+//					//Manhatten distance
+//					int distance =  Math.abs(pos.getX() - n.getPosX()) 
+//			        		+ Math.abs(pos.getY() - n.getPosY());
+//					if(distance <= startInfo.getStenchDistance())
+//						n.removeAllWumpusIds();
+//				}
+//			}
+//		} else {
+			// key=id value=distance
 			int hPosX = pos.getX();
 			int hPosY = pos.getY();
 			int radius = this.stenchRadius;
 			for(Map.Entry<Integer, Integer> id : percept.getWumpusStenchRadar().entrySet()) {
 				
-				for(int y = hPosY - radius; y < hPosY + radius; y++) {
-					for(int x = hPosX - radius; x  < hPosX + radius; x++) {
-						Tile n = getTile(x, y);
-						int distance =  Math.abs(hPosX - n.getPosX()) 
-				        		+ Math.abs(hPosY - n.getPosY());
-						if(distance == id.getValue()) {
-							n.addWumpusId(id.getKey(), id.getValue());
-						}
+				// Go around the hunter and add the wumpus
+				for(int y = hPosY - radius; y <= hPosY + radius; y++) {
+					for(int x = hPosX - radius; x  <= hPosX + radius; x++) {
+						
+						Tile t = getTile(x, y);
+						int distance =  Math.abs(hPosX - t.getPosX()) 
+				        		+ Math.abs(hPosY - t.getPosY());
+						
+						if(distance <= radius)
+							t.addWumpusId(id.getKey(), radius - distance);
+						
+						// Here is the wumpus with given distance/ stench
+//						if(distance == id.getValue()) {
+////							t.addWumpusId(id.getKey(), id.getValue()); // TODO: not needed
+//							
+//							// Go around the possible wumpus tile and set stench values
+//							// which is needed for the search
+//							System.out.println("Have set wumpus set @" + x + "x und " + "y");
+//							
+//							for(int wY = t.getPosY() - radius; wY < t.getPosY() + radius; wY++) {
+//								for(int wX = t.getPosX() - radius; wX < t.getPosX() + radius; wX++) {
+//									
+//									
+//									Tile tW = getTile(wX, wY);
+//									int manDistance = Math.abs(t.getPosX() - tW.getPosX()) 
+//							        		+ Math.abs(t.getPosY() - tW.getPosY());
+//									
+//									if(manDistance <= radius) {
+//										tW.addWumpusId(id.getKey(), manDistance);
+//									}
+//								}
+//							}
+//						} 
 					}
-				}
-				
+//				}
 			}
+			System.out.println("HELLO " + getTile(18, 18).getWumpuse());
 		}
-		
-		if(percept.isGlitter()) getTile(pos).setTileType(TileType.GOLD);
+		showWumpusDebug();
+	}
+	
+	private void showWumpusDebug() {
+		for(int i = 0; i < view.size(); i++) {
+			for(int j = 0; j < view.size(); j++) {
+				
+				Tile t = view.get(i).get(j);
+				if(t != null) {
+					Hashtable<Integer, Integer> w = view.get(i).get(j).getWumpuse();
+					if(w != null && !w.isEmpty()) {
+						System.out.print(view.get(i).get(j).getWumpuse() + " ");
+					} else {
+						System.out.print("         ");
+					}
+				} else {
+					System.out.print("         ");
+				}
+			}
+			System.out.println("");
+		}
 	}
 	
 	private void setPossibleTypeAround(final Vector2 pos, final TileType type) {
@@ -246,35 +305,33 @@ public class State {
 			for(int x = 0; x < this.view.size(); x++) {
 				Tile n = this.view.get(y).get(x);
 				if(n != null) {
+					s += "(";
 					if(n.getTileType() == TileType.UNKNOWN) {
 						//if(n.getPossibleTypes() == null) continue; //TODO stuipd fix?
 						// shouldnt be ther something if is it unknown?
 						
 						// Possible empty if there was a wumpus
 //						if(n.getPossibleTypes() != null) {
-							s += "(";
 							for(TileType t : n.getPossibleTypes()) {
 								//if(t == null) break; //TODO need it by foreach?
 								s += t.getSymbol();
 							}
-							s += ")";
 //						}
 					} else {
 						s += " " + n.getTileType().getSymbol() + " ";
 					}
 					// --- Wumpus ---
 					if(n.getWumpusIds() != null && !n.getWumpusIds().isEmpty()) {
-						s += "(";
 						for(Integer i : n.getWumpusIds()) {
-							s += i;
+							s += "X";
 						}
-						s += ")";
 					}
 					// --- Wumpus END ---
 					if(n.isBreeze()) {
 						s = s.substring(0, s.length() - 1);
 						s += "B";
 					}
+					s += ")";
 				} else {
 					s += "e   ";
 				}

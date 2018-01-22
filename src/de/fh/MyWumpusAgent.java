@@ -32,6 +32,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	
 	private Stack<Vector2> nextActionListPos;
 	
+	private boolean quitGame;
+	
 	public static void main(String[] args) {
 		
 		// Start a new thread for the debug window
@@ -81,7 +83,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.goalLocation = false;
 			
 			this.wasScream = false;
-			
+			this.quitGame = false;
 			
 			this.nextActionListPos = new Stack<>();
 			
@@ -92,6 +94,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         if(actionEffect == HunterActionEffect.GAME_OVER) {
         	System.out.println("DEBUG: Game Over!");         	
         }
+        
+        if(this.quitGame) return;
 
         if(actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
         	System.out.println("DEBUG: Bumped into WALL!");
@@ -141,7 +145,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         		 System.out.println("DEBUG: GOLD found!");
         		 this.goalGold = false;
         		 this.goalLocation = true;
-        		 newSearch();
+        		 if(!newSearch()) {
+        			 this.quitGame = true;
+        			 return;
+        		 };
         	 }
         	 
         	 if(this.moveHelper.getCurrentPos().equals(this.nextActionListPos.peek())) {
@@ -151,7 +158,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
         			 if(this.goalLocation && this.moveHelper.getCurrentPos().equals(this.hunterStartPos)) {
         				 System.out.println("########### Game finished! ###########");
         			 } else {
-        				 newSearch();
+        				 if(!newSearch()) {
+                			 this.quitGame = true;
+                			 return;
+                		 };
         			 }
         		 }
         	 }
@@ -176,14 +186,20 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		
 		// Set the pits around breeze is in state.class done
         if(percept.isBreeze()) {
-        	newSearch();
+        	if(!newSearch()) {
+   			 this.quitGame = true;
+   			 return;
+   		 };
         }
 		
 		if(this.search == null) {
-			newSearch();
+			if(!newSearch()) {
+   			 this.quitGame = true;
+   			 return;
+   		 };
 		}
 		
-		System.out.println(this.state.toStringPossible());
+//		System.out.println(this.state.toStringPossible());
 //		System.out.println(this.state.toStringKnown());
 	}
 
@@ -202,6 +218,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	@Override
 	public HunterAction action() {
 		System.out.println("--- START action --- ActionListPos: " + this.nextActionListPos);
+		
+		if(this.quitGame) return HunterAction.QUIT_GAME;
 		
 		// if game init isn't done do NOTHING 
 		if(!this.initDone) {
@@ -222,15 +240,16 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		if(!this.nextActionListPos.isEmpty()) {
 			this.nextAction = this.moveHelper.moveTo(this.nextActionListPos.peek());
 		} else {
-			throw new IllegalStateException("ERROR: ActionList is empty! Should not be possible here "
-					+ "OR Game finished!");
+			return HunterAction.QUIT_GAME;
+//			throw new IllegalStateException("ERROR: ActionList is empty! Should not be possible here "
+//					+ "OR Game finished!");
 		}
 		
 		System.out.println("--- END STEP (action [" + nextAction + "] now SERVER) ---\n");
 		return nextAction;
 	}
 	
-	private void newSearch() {
+	private boolean newSearch() {
 		this.nextActionListPos.clear();
 		
 		Goal goal = null;
@@ -238,13 +257,13 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		
 		if(this.goalGold) {
 			System.out.println("# Start goalGold search:");
-			goal = new GoalGold(9);
+			goal = new GoalGold(5.5f);
 			searchValues = new SearchValues();
 		}
 		
 		if(this.goalLocation) {
 			System.out.println("# Start goalLocation search:");
-			goal = new GoalLocation(this.hunterStartPos, 0, false);
+			goal = new GoalLocation(this.hunterStartPos, 9, false);
 			searchValues = new SearchValues();
 		}
 		
@@ -255,6 +274,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		// ------ Search START -----
 		this.search = new Search(goal, searchValues, this.state);
 		Node iNode = this.search.start(this.moveHelper.getCurrentPos());
+		if(iNode == null) return false;
 		System.out.println(" -> Search found something: " + iNode);
 		
 		
@@ -265,5 +285,6 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		this.nextActionListPos.pop(); // last one is root (hunterpos)
 		System.out.println("-> Created actionList: " + this.nextActionListPos);
 		// ------ Search END -----
+		return true;
 	}
 }

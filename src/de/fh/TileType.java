@@ -5,12 +5,9 @@ public enum TileType {
 	UNKNOWN('U'),
 	EMPTY('E'),
 	WALL('W'),
-	NOT_WALL('w'),
-	// TODO Remove? Moving things are not tile type
-	//HUNTER('H'), 
-	//WUMPUS('X'),
+	NO_WALL('w'),
 	PIT('P'),
-	NOT_PIT('p'),
+	NO_PIT('p'),
 	GOLD('G');
 	
 	private final char symbol; 
@@ -21,21 +18,21 @@ public enum TileType {
 	
 	public char getSymbol() { return this.symbol; }
 	
-	// TODO: Must be not static? ref from this in Enum?
+	// TODO: Must be not static? ref from 'this' in Enum?
 	public static boolean isCounterpart(final TileType typeOne, final TileType typeTwo) {
-		if(typeOne == WALL && typeTwo == NOT_WALL) return true;
-		if(typeOne == PIT && typeTwo == NOT_PIT) return true;
+		if(typeOne == WALL && typeTwo == NO_WALL) return true;
+		if(typeOne == PIT && typeTwo == NO_PIT) return true;
 		return false;
 	}
 	
 	/*
-	 * @return the counterpart. If type hasn't counterpart give given type back
+	 * @return the counterpart. If type hasn't a counterpart give given type back
 	 */
 	public static TileType getCounterPart(final TileType type) {
-		if(type == WALL) return TileType.NOT_WALL;
-		if(type == NOT_WALL) return TileType.NOT_WALL;
-		if(type == PIT) return TileType.NOT_PIT;
-		if(type == NOT_PIT) return TileType.PIT;
+		if(type == WALL) return TileType.NO_WALL;
+		if(type == NO_WALL) return TileType.NO_WALL;
+		if(type == PIT) return TileType.NO_PIT;
+		if(type == NO_PIT) return TileType.PIT;
 		return type;
 	}
 }

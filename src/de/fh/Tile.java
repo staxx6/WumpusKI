@@ -91,11 +91,8 @@ public class Tile {
 			this.possibleTypes.add(type);
 	}
 	
-	//TODO: Untested
 	public void removePossibleType(final TileType type) {
 		if(!this.possibleTypes.remove(type)) {
-			System.out.println("DEBUG: Couldn't remove possible tile type " + type 
-					+ " from tile: " + toString());
 		}; // TODO Error if not there? looks it returns a bool
 	}
 
@@ -113,6 +110,10 @@ public class Tile {
 	public Set<Integer> getWumpusIds() {
 		if(wumpuse == null) return null;	
 		return wumpuse.keySet();
+	}
+	
+	public Hashtable<Integer, Integer> getWumpuse() {
+		return this.wumpuse;
 	}
 	
 	public int getWumpusDistance(final int id) {

@@ -10,7 +10,6 @@ import de.fh.game.Entity.Direction;
 
 /*
  * This class implement the A* search
- * TODO: Untested
  */
 public class Search {
 
@@ -21,6 +20,9 @@ public class Search {
 	private ArrayList<Node> closedList;
 	
 	private State state; 
+	
+	
+	private boolean debugOut = true;
 	
 	public Search(final Goal goal, final SearchValues searchValues, 
 			final State state) {
@@ -53,29 +55,28 @@ public class Search {
 		// TODO: Level could have no more unknowns (with given risk)
 		// Possible level END
 		// - have to take more risk here
-		throw new NullPointerException("Couldn't find any goal node!");
+		return null;
+//		throw new NullPointerException("ERROR: Couldn't find any goal node OR Game is finished");
 	}
 	
 	/*
 	 * Expand the node. It prefers the north node
 	 */
 	private void expandNode(final Node previewNode) {
-		System.out.println("@expandNode (" + previewNode.getTile().getPosVector() + "): ");
+		if(this.debugOut) System.out.println("@expandNode (" + previewNode.getTile().getPosVector() + "): ");
 		Direction dir[];
 		dir = Direction.values();
 		for(int i = 3; i >= 0; i--) {
 			
 			Vector2 newPos = calcNewPos(previewNode.getTile().getPosVector(),
 					dir[i]);
-			System.out.print("Pos " + newPos + " got: ");
+			if(this.debugOut) System.out.print("Pos " + newPos + " got: ");
 			
-			// TODO: Missing checks for lower postions
-			// TODO: Problem with the list
 			if(newPos.getX() > this.state.getCurrViewSizeLimit().getX() 
 					|| newPos.getY() > this.state.getCurrViewSizeLimit().getY()
-						|| false
-							|| false) {
-				System.out.println("OUT (out of level/array limits)");
+						|| newPos.getX() <= 0
+							|| newPos.getY() <= 0) {
+				if(this.debugOut) System.out.println("OUT (out of level/array limits)");
 				continue;
 			}
 			
@@ -88,23 +89,17 @@ public class Search {
 			
 			if(sucType == TileType.WALL || sucType == TileType.PIT) {
 				this.closedList.add(successor);
-				System.out.println("OUT (wall/pit)");
+				if(this.debugOut) System.out.println("OUT (wall/pit)");
 				continue;
 			}
 			
-//			for(Node n : this.closedList) {
-//				if(successor.equals(n)) {
-//					System.out.println("OUT (in closed)");
-//					break;
-//				}
-//			}
 			if(this.closedList.contains(successor)) {
-				System.out.println("OUT (is already in closedList)");
+				if(this.debugOut) System.out.println("OUT (is already in closedList)");
 				continue;
 			}
 			
 			evaluateNode(successor);
-			System.out.print("[" + successor.getValue() + "]");
+			if(this.debugOut) System.out.print("[" + successor.getValue() + "]");
 			addNode(successor);
 		}
 	}
@@ -144,8 +139,10 @@ public class Search {
 			
 			if(tile.getWumpusIds() != null && !tile.getWumpusIds().isEmpty()) {
 				for(int id : tile.getWumpusIds()) {
-					risk += this.searchValues.getWumpusDistanceFac() 
-							/ tile.getWumpusDistance(id);
+					if(tile.getWumpusDistance(id) != 0) {
+						risk += this.searchValues.getWumpusDistanceFac() 
+								/ tile.getWumpusDistance(id);
+					}
 				}
 			}
 		}
@@ -175,7 +172,7 @@ public class Search {
 		if(expansionCandidate.getValue().getRisk() 
 				> goal.getRiskTolerance()) {
 			this.closedList.add(expansionCandidate);
-			System.out.println(" OUT (risk too high)");
+			if(this.debugOut) System.out.println(" OUT (risk too high)");
 			return;
 		}
 		
@@ -188,7 +185,7 @@ public class Search {
 			}
 		}
 		this.openList.add(newIndex, expansionCandidate);
-		System.out.println(" placed in openList index: " + newIndex);
+		if(this.debugOut) System.out.println(" placed in openList index: " + newIndex);
 	}
 }
 
