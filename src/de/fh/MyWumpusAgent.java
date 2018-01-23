@@ -207,6 +207,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		if (!this.nextActionListPos.isEmpty()) {
 			this.nextAction = this.moveHelper.moveTo(this.nextActionListPos.peek());
 		} else {
+			System.out.println("--- END STEP (action [QUIT] now SERVER) search found nothing ---\n");
 			return HunterAction.QUIT_GAME;
 		}
 
@@ -215,6 +216,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	}
 
 	public void newSearch() {
+		if(this.quitGame) return;
+		
 		System.out.println("Issued new search: gold: " + this.goalGold + " loc: " + this.goalLocation);
 		this.nextActionListPos.clear();
 
@@ -253,8 +256,6 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		this.nextActionListPos.pop(); // last one is root (hunterpos)
 		System.out.println("-> Created actionList: " + this.nextActionListPos);
 		// ------ Search END -----
-		
-		this.quitGame = false;
 	}
 
 	public void setGoalGold(final boolean goalGold) {

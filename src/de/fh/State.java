@@ -16,7 +16,7 @@ import de.fh.wumpus.WumpusStartInfo;
 
 public class State {
 
-	private WumpusStartInfo startInfo;
+	private Vector2 startPos;
 	private int stenchRadius;
 
 	private List<List<Tile>> view;
@@ -25,23 +25,22 @@ public class State {
 
 	private HunterPercept percept;
 	private MyWumpusAgent agent;
-	
-	public State(final Vector2 startPos, final WumpusStartInfo startInfo, 
-			final HunterMoveHelper moveHelper, final HunterPercept percept,
-				final MyWumpusAgent agent) {
-		this.startInfo = startInfo;
+
+	public State(final Vector2 startPos, final WumpusStartInfo startInfo, final HunterMoveHelper moveHelper,
+			final HunterPercept percept, final MyWumpusAgent agent) {
 		this.moveHelper = moveHelper;
 		this.percept = percept;
 		this.agent = agent;
+		this.startPos = startPos;
 
 		this.stenchRadius = startInfo.getStenchDistance();
 
 		// Create Lists and fill it with null
 		if (this.view == null) { // TODO: Not needed
 			this.view = new ArrayList<>();
-			for (int y = 0; y < startPos.getY() * 2; y++) {
+			for (int y = 0; y < this.startPos.getY() * 2; y++) {
 				this.view.add(new ArrayList<>());
-				for (int x = 0; x < startPos.getX() * 2; x++) {
+				for (int x = 0; x < this.startPos.getX() * 2; x++) {
 					this.view.get(y).add(null);
 				}
 			}
@@ -203,35 +202,26 @@ public class State {
 
 		getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.EMPTY);
 
-		if (percept.isGlitter()) {
-			System.out.println("DEBUG: GOLD found!");
-			this.agent.setGoalGold(false);
-			this.agent.setGoalGold(true);
-			
-			this.agent.newSearch();
-			return;
-		}
-
 		if (this.moveHelper.getCurrentPos().equals(this.agent.getNextActionListPos().peek())) {
 			this.agent.getNextActionListPos().pop();
-			
+
 			if (this.agent.getNextActionListPos().isEmpty()) {
-				System.out.println("Search goal/location found!");
-				
-				if (this.agent.getGoalLocation() 
-						&& this.moveHelper.getCurrentPos().equals(this.startInfo.getStartPosition())) {
+				System.out.print("Search goal/location found! Check for end goalLoc: ");
+				if (this.agent.getGoalLocation()
+						&& this.moveHelper.getCurrentPos().equals(this.startPos)) {
 					System.out.println("########### Game finished! ###########");
+					this.agent.setQuitGame(true);
 				} else {
 					this.agent.newSearch();
 				}
 			}
 		}
 	}
-	
+
 	public void scream() {
-		//TODO
+		// TODO
 	}
-	
+
 	public void breeze() {
 		this.agent.newSearch();
 	}
@@ -239,17 +229,17 @@ public class State {
 	public void wumpusKilled() {
 		// TODO
 	}
-	
+
 	public void noMoreShoots() {
 		// TODO
 	}
-	
+
 	public void glitter() {
 		getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.GOLD);
 		this.agent.setGoalGold(false);
 		this.agent.setGoalLocation(true);
 	}
-	
+
 	/*
 	 * Return the tile where the hunter is standing
 	 * 
@@ -375,8 +365,7 @@ public class State {
 					s += "e   ";
 				}
 				// --- Hunter ---
-				if (x == this.moveHelper.getCurrentPos().getX() 
-						&& y == this.moveHelper.getCurrentPos().getY()) {
+				if (x == this.moveHelper.getCurrentPos().getX() && y == this.moveHelper.getCurrentPos().getY()) {
 					s = s.substring(0, s.length() - 1);
 					s += "H ";
 				}
