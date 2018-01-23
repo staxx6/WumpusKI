@@ -21,8 +21,7 @@ public class Search {
 	
 	private State state; 
 	
-	
-	private boolean debugOut = true;
+	private boolean debugOut = false;
 	
 	public Search(final Goal goal, final SearchValues searchValues, 
 			final State state) {
@@ -47,16 +46,12 @@ public class Search {
 				return expansionCandidate;
 			} else {
 				expandNode(expansionCandidate);
-//				System.out.println("Open: " + this.openList.size());
-//				System.out.println("Closed: " + this.closedList.size());
 			}
 		}
-//		return null;
 		// TODO: Level could have no more unknowns (with given risk)
 		// Possible level END
 		// - have to take more risk here
 		return null;
-//		throw new NullPointerException("ERROR: Couldn't find any goal node OR Game is finished");
 	}
 	
 	/*
