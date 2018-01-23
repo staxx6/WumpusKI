@@ -1,6 +1,7 @@
 package de.fh;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -26,23 +27,24 @@ public class State {
 	private HunterPercept percept;
 	private MyWumpusAgent agent;
 
+	private HashMap<Vector2, Float> historyStench;
+
 	public State(final Vector2 startPos, final WumpusStartInfo startInfo, final HunterMoveHelper moveHelper,
 			final HunterPercept percept, final MyWumpusAgent agent) {
 		this.moveHelper = moveHelper;
 		this.percept = percept;
 		this.agent = agent;
 		this.startPos = startPos;
+		this.historyStench = new HashMap<>();
 
 		this.stenchRadius = startInfo.getStenchDistance();
 
 		// Create Lists and fill it with null
-		if (this.view == null) { // TODO: Not needed
-			this.view = new ArrayList<>();
-			for (int y = 0; y < this.startPos.getY() * 2; y++) {
-				this.view.add(new ArrayList<>());
-				for (int x = 0; x < this.startPos.getX() * 2; x++) {
-					this.view.get(y).add(null);
-				}
+		this.view = new ArrayList<>();
+		for (int y = 0; y < this.startPos.getY() * 2; y++) {
+			this.view.add(new ArrayList<>());
+			for (int x = 0; x < this.startPos.getX() * 2; x++) {
+				this.view.get(y).add(null);
 			}
 		}
 		this.currViewSizeLimit = new Vector2(this.view.get(0).size(), this.view.size());
@@ -62,10 +64,20 @@ public class State {
 	public void setWumpusStench() {
 		System.out.println("radar says: " + percept.getWumpusStenchRadar());
 
-		int hPosX = this.moveHelper.getCurrentPos().getX();
-		int hPosY = this.moveHelper.getCurrentPos().getY();
+		Vector2 hPos = this.moveHelper.getCurrentPos();
+		int hPosX = hPos.getX();
+		int hPosY = hPos.getY();
 		int radius = this.stenchRadius;
+		
 		for (Map.Entry<Integer, Integer> id : percept.getWumpusStenchRadar().entrySet()) {
+			
+			// TODO: Untested
+			float value = 0;
+			if(this.historyStench.get(hPos) != null) {
+				value += this.historyStench.get(hPos);
+			}
+			value += id.getValue();
+			this.historyStench.put(this.moveHelper.getCurrentPos(), value);
 
 			// Go around the hunter and add the wumpus
 			for (int y = hPosY - radius; y <= hPosY + radius; y++) {
@@ -102,10 +114,11 @@ public class State {
 					// }
 				}
 			}
-			System.out.println("HELLO " + getTile(18, 18).getWumpuse());
+			System.out.println("HELLO " + getTile(20, 17).getWumpuse());
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void showWumpusDebug() {
 		for (int i = 0; i < view.size(); i++) {
 			for (int j = 0; j < view.size(); j++) {
@@ -207,14 +220,33 @@ public class State {
 
 			if (this.agent.getNextActionListPos().isEmpty()) {
 				System.out.print("Search goal/location found! Check for end goalLoc: ");
-				if (this.agent.getGoalLocation()
-						&& this.moveHelper.getCurrentPos().equals(this.startPos)) {
+				if (this.agent.getGoalLocation() && this.moveHelper.getCurrentPos().equals(this.startPos)) {
 					System.out.println("########### Game finished! ###########");
 					this.agent.setQuitGame(true);
 				} else {
-					this.agent.newSearch();
+					this.agent.setTriggerNewSearch(true);
+					;
+					System.out.println("trigger by effect move");
 				}
 			}
+		}
+	}
+	
+	// TODO: Untested
+	public void rumble() {
+		this.historyStench.replaceAll((v, f) -> { 
+			if(f < 1) { 
+				f = 0f;
+			} else { 
+				f /= 2;
+			}
+			return f;
+		}
+		);
+		
+		for(Vector2 v : historyStench.keySet()) {
+			if(this.historyStench.get(v) == 0)
+				this.historyStench.remove(v);
 		}
 	}
 
@@ -223,7 +255,8 @@ public class State {
 	}
 
 	public void breeze() {
-		this.agent.newSearch();
+		this.agent.setTriggerNewSearch(true);
+		System.out.println("trigger by effect breeze @ state");
 	}
 
 	public void wumpusKilled() {
@@ -239,7 +272,7 @@ public class State {
 		this.agent.setGoalGold(false);
 		this.agent.setGoalLocation(true);
 	}
-
+	
 	/*
 	 * Return the tile where the hunter is standing
 	 * 
@@ -351,10 +384,10 @@ public class State {
 					}
 					// --- Wumpus ---
 					if (n.getWumpusIds() != null && !n.getWumpusIds().isEmpty()) {
-						for (Integer i : n.getWumpusIds()) {
-							s = s.substring(0, s.length() - 1);
-							s += "X";
-						}
+						// for (Integer i : n.getWumpusIds()) {
+						s = s.substring(0, s.length() - 1);
+						s += "X";
+						// }
 					}
 					// --- Wumpus END ---
 					if (n.isBreeze()) {

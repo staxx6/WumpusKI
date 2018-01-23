@@ -21,7 +21,7 @@ public class Search {
 	
 	private State state; 
 	
-	private boolean debugOut = false;
+	private boolean debugOut = true;
 	
 	public Search(final Goal goal, final SearchValues searchValues, 
 			final State state) {

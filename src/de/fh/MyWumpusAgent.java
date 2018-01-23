@@ -29,8 +29,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private boolean goalGold, goalKill, goalLocation;
 
 	private Stack<Vector2> nextActionListPos;
+	private Stack<Vector2> historyListPos;
 
 	private boolean quitGame;
+	private boolean triggerNewSearch;
 
 	public static void main(String[] args) {
 
@@ -79,13 +81,17 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.goalGold = true; // first goal
 			this.goalKill = false; // TODO: should be always true if there are still arrows
 			this.goalLocation = false; // last goal (go back to start position)
+			this.triggerNewSearch = true;
 
 			this.wasScream = false;
 			this.quitGame = false;
 
 			this.nextActionListPos = new Stack<>();
+			this.historyListPos = new Stack<>();
+			this.historyListPos.push(this.moveHelper.getCurrentPos());
 
 			this.initDone = true;
+
 			System.out.println("DEBUG: Game initialized");
 		}
 
@@ -99,7 +105,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			System.out.println("DEBUG: Bumped into WALL!");
 			this.state.bumpedIntoWall();
 			System.out.println("-> Search goal/location NOT found - new SEARCH: ");
-			newSearch();
+			this.triggerNewSearch = true;
+			System.out.println("trigger by effect WALL");
 		}
 
 		if (actionEffect == HunterActionEffect.BUMPED_INTO_HUNTER) {
@@ -116,10 +123,14 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			System.out.println("DEBUG: No more arrows!");
 			this.state.noMoreShoots();
 		}
-		
+
 		if (actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
 			System.out.println("DEBUG: Movement SUCCESSFUL");
 			this.state.movementSuccessful();
+
+			if (percept.getWumpusStenchRadar().isEmpty()) {
+				this.historyListPos.push(this.moveHelper.getCurrentPos());
+			}
 		}
 
 		// -------- Server response END --------
@@ -135,7 +146,8 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		if (percept.isBreeze()) {
 			this.state.setPossibleTypeAround(TileType.PIT);
 			this.state.getTile(this.moveHelper.getCurrentPos()).setBreeze(true);
-			newSearch();
+			this.triggerNewSearch = true;
+			System.out.println("trigger by breeze");
 		} else {
 			this.state.removePossibleTypeAround(TileType.PIT);
 		}
@@ -143,26 +155,33 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		if (percept.isGlitter()) {
 			System.out.println("GOLD found!");
 			this.state.glitter();
-			newSearch();
+			this.triggerNewSearch = true;
+			System.out.println("trigger by glitter");
 		}
 
 		if (percept.getWumpusStenchRadar().isEmpty()) {
 			this.state.removeWumpusAll();
-			newSearch();
+			// newSearch(); // possible loop!
 		} else {
-			if(!this.state.getHunterTile().getWumpuse().isEmpty()) {
-				newSearch();
+			if (this.state.getHunterTile().getWumpuse() != null && !this.state.getHunterTile().getWumpuse().isEmpty()
+					&& !this.moveHelper.isTurn()) {
+				/* TODO: (right pos or one down?) // what is it even doing?
+				 * this.goalGoBack = true;
+				 * -> go history
+				 * 		-> so long if in radar
+				 * 		-> list empty -> new goalGold
+				 */
+				this.triggerNewSearch = true;
+				System.out.println("trigger by effect radar");
 			}
 			this.state.removeWumpusAll();
 			this.state.setWumpusStench();
 		}
 
-		// TODO: Is it ever triggered?
-		if (this.search == null) {
-			newSearch();
-		}
-
 		// -------- Get Percept stuff END --------
+
+		if (this.triggerNewSearch)
+			newSearch();
 
 		System.out.println(this.state.toStringPossible());
 		// System.out.println(this.state.toStringKnown());
@@ -216,8 +235,11 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	}
 
 	public void newSearch() {
-		if(this.quitGame) return;
-		
+		if (this.quitGame)
+			return;
+		if (!this.triggerNewSearch)
+			System.out.println("FAIL");
+
 		System.out.println("Issued new search: gold: " + this.goalGold + " loc: " + this.goalLocation);
 		this.nextActionListPos.clear();
 
@@ -245,6 +267,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		Node iNode = this.search.start(this.moveHelper.getCurrentPos());
 		if (iNode == null) {
 			this.quitGame = true;
+			this.triggerNewSearch = false;
 			return;
 		}
 		System.out.println(" -> Search found something: " + iNode);
@@ -256,6 +279,11 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		this.nextActionListPos.pop(); // last one is root (hunterpos)
 		System.out.println("-> Created actionList: " + this.nextActionListPos);
 		// ------ Search END -----
+		this.triggerNewSearch = false;
+	}
+
+	public void setTriggerNewSearch(final boolean triggerNewSearch) {
+		this.triggerNewSearch = triggerNewSearch;
 	}
 
 	public void setGoalGold(final boolean goalGold) {
