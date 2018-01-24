@@ -2,6 +2,10 @@ package de.fh.search;
 
 public abstract class Goal {
 	
+	public enum Goals {
+		GOLD, LOCATION, KILL, GO_BACK;
+	};
+	
 	// Hunter's risk tolerance for this goal
 	// A bigger number means more risk
 	protected float riskTolerance;

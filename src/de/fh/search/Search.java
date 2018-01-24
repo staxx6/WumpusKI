@@ -116,6 +116,7 @@ public class Search {
 	}
 	
 	// Evaluate node value with A*-Algo
+	// TODO NEXT STUFF HERE FOR GO BACK
 	private void evaluateNode(final Node expansionCandidate) {
 		Tile tile = expansionCandidate.getTile();
 		NodeValue nodeValue = expansionCandidate.getValue();

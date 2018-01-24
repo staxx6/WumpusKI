@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import de.fh.search.Goal.Goals;
 import de.fh.util.Vector2;
 import de.fh.wumpus.HunterPercept;
 import de.fh.wumpus.WumpusStartInfo;
@@ -220,7 +221,8 @@ public class State {
 
 			if (this.agent.getNextActionListPos().isEmpty()) {
 				System.out.print("Search goal/location found! Check for end goalLoc: ");
-				if (this.agent.getGoalLocation() && this.moveHelper.getCurrentPos().equals(this.startPos)) {
+				if (this.agent.getGoals().contains(Goals.LOCATION) 
+						&& this.moveHelper.getCurrentPos().equals(this.startPos)) {
 					System.out.println("########### Game finished! ###########");
 					this.agent.setQuitGame(true);
 				} else {
@@ -250,8 +252,10 @@ public class State {
 		}
 	}
 
+	//Percept scream and server effect killed?
 	public void scream() {
-		// TODO
+		// TODO all? fix only for one
+		this.agent.getGoals().remove(Goals.KILL);
 	}
 
 	public void breeze() {
@@ -259,18 +263,20 @@ public class State {
 		System.out.println("trigger by effect breeze @ state");
 	}
 
+	// Percept scream and server effect killed?
 	public void wumpusKilled() {
-		// TODO
+		// TODO all? fix only for one
+		this.agent.getGoals().remove(Goals.KILL);
 	}
 
 	public void noMoreShoots() {
-		// TODO
+		this.agent.getGoals().remove(Goals.KILL);
 	}
 
 	public void glitter() {
 		getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.GOLD);
-		this.agent.setGoalGold(false);
-		this.agent.setGoalLocation(true);
+		this.agent.getGoals().add(Goals.LOCATION);
+		this.agent.getGoals().remove(Goals.GOLD);
 	}
 	
 	/*
