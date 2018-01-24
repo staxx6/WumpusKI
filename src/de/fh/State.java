@@ -362,14 +362,14 @@ public class State {
 	 */
 	public String toStringPossible() {
 		String s = "------------ Current View - Possible --------------\n";
-		s += "-  ";
-		for (int i = 0; i < this.view.size(); i++) {
-			s += i + "  ";
+		s += "-\t";
+		for (int i = 17; i < this.view.size() - 7; i++) {
+			s += i + "\t";
 		}
 		s += "\n";
-		for (int y = 0; y < this.view.size(); y++) {
-			s += y + ". ";
-			for (int x = 0; x < this.view.size(); x++) {
+		for (int y = 17; y < this.view.size() - 7; y++) {
+			s += y + "\t";
+			for (int x = 17; x < this.view.size() - 7; x++) {
 				Tile n = this.view.get(y).get(x);
 				if (n != null) {
 					if (n.getTileType() == TileType.UNKNOWN) {
@@ -386,7 +386,7 @@ public class State {
 						s += ")";
 						// }
 					} else {
-						s += " " + n.getTileType().getSymbol() + " ";
+						s += n.getTileType().getSymbol();
 					}
 					// --- Wumpus ---
 					if (n.getWumpusIds() != null && !n.getWumpusIds().isEmpty()) {
@@ -401,13 +401,14 @@ public class State {
 						s += "B";
 					}
 				} else {
-					s += "e   ";
+					s += "e";
 				}
 				// --- Hunter ---
 				if (x == this.moveHelper.getCurrentPos().getX() && y == this.moveHelper.getCurrentPos().getY()) {
 					s = s.substring(0, s.length() - 1);
-					s += "H ";
+					s += "H";
 				}
+				s += "\t";
 				// --- Hunter END ---
 			}
 			s += "\n";
