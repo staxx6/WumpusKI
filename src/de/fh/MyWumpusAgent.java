@@ -40,8 +40,9 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private boolean triggerNewSearch;
 	private boolean blockGoBackGoal;
 	private boolean wasInRadar;
-
 	private boolean shootNow;
+	private boolean wasShoot;
+	private boolean wasSit;
 
 	public static void main(String[] args) {
 
@@ -96,6 +97,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.triggerNewSearch = true;
 			this.blockGoBackGoal = false;
 			this.wasInRadar = false;
+			this.wasSit = false;
 
 			this.wasScream = false;
 			this.quitGame = false;
@@ -106,6 +108,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 					.push(new Vector2(this.moveHelper.getCurrentPos().getX(), this.moveHelper.getCurrentPos().getY()));
 
 			this.shootNow = false;
+			this.wasShoot = false;
 
 			this.initDone = true;
 
@@ -148,15 +151,14 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
 		if (actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
 			System.out.println("DEBUG: Movement SUCCESSFUL");
-			// if (this.moveHelper.getCurrentPos().equals(new Vector2(20, 18))) {
-			// System.out.println("--------------------------------");
-			// System.out.println("-------HERE------------");
-			// System.out.println("--------------------------------");
-			// }
-			this.state.movementSuccessful();
-
-			this.historyListPos
-					.push(new Vector2(this.moveHelper.getCurrentPos().getX(), this.moveHelper.getCurrentPos().getY()));
+			if (!this.wasSit) {
+				this.state.movementSuccessful();
+				
+				if (!this.moveHelper.isTurn()) {
+					this.historyListPos.push(new Vector2(this.moveHelper.getCurrentPos().getX(),
+							this.moveHelper.getCurrentPos().getY()));
+				}
+			}
 		}
 
 		// -------- Server response END --------
@@ -208,7 +210,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 									&& !this.historyListPos.peek().equals(this.moveHelper.getCurrentPos())) {
 								setGoalGoBack();
 								this.blockGoBackGoal = true;
-								this.triggerNewSearch = true;
+								// this.triggerNewSearch = true;
 								System.out.println("Stench triggered new search");
 							} else {
 								this.historyListPos.push(tmpPos);
@@ -219,6 +221,7 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			}
 			this.state.removeWumpusAll();
 			this.state.setWumpusStench();
+			this.triggerNewSearch = true;
 		}
 
 		if (percept.isScream()) {
@@ -249,20 +252,38 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	@Override
 	public HunterAction action() {
 		System.out.println("--- START action --- ActionListPos: " + this.nextActionListPos);
+		this.wasSit = false;
 
 		if (this.quitGame) {
-			System.out.println("--- END STEP (action [QUIT] now SERVER) search found nothing ---\n");
-			return HunterAction.QUIT_GAME;
+			System.out.println("Is in radius: " + this.state.isInStenchRadius() + " nearst: "
+					+ this.state.getTile(this.moveHelper.getCurrentPos()).getNearstWumpusDistance());
+			if (this.state.isInStenchRadius()
+					&& (this.state.getTile(this.moveHelper.getCurrentPos()).getNearstWumpusDistance() > 1
+					|| this.state.getTile(this.moveHelper.getCurrentPos()).getNearstWumpusDistance() == 0)) {
+				System.out.println(
+						"--- END STEP (action [SIT] now SERVER) search found nothing but wumpus is far away. After this new search (triggered)---\n");
+				this.triggerNewSearch = true;
+				this.wasSit = true;
+				this.quitGame = false;
+				return HunterAction.SIT;
+			} else {
+				System.out.println("--- END STEP (action [QUIT] now SERVER) search found nothing (triggered) ---\n");
+				return HunterAction.QUIT_GAME;
+			}
+//			System.out.println("--- END STEP (action [QUIT] now SERVER) search found nothing (quit trigger) ---\n");
+//			return HunterAction.QUIT_GAME;
 		}
 
 		if (!this.initDone) {
 			System.out.println("--- END STEP (action [SIT] now SERVER) init NOT done ---\n");
+			this.wasSit = true;
 			return HunterAction.SIT;
 		}
 
 		if (this.shootNow) {
-			System.out.println("--- END STEP (action [SHOOT] now SERVER) gold FOUND ---\n");
+			System.out.println("--- END STEP (action [SHOOT] now SERVER) wumpus in range ---\n");
 			this.shootNow = false;
+			this.wasShoot = true;
 			this.state.arrowShot();
 			return HunterAction.SHOOT;
 		}
@@ -280,8 +301,20 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		if (!this.nextActionListPos.isEmpty()) {
 			this.nextAction = this.moveHelper.moveTo(this.nextActionListPos.peek());
 		} else {
-			System.out.println("--- END STEP (action [QUIT] now SERVER) search found nothing ---\n");
-			return HunterAction.QUIT_GAME;
+			System.out.println("Is in radius: " + this.state.isInStenchRadius() + " nearst: "
+					+ this.state.getTile(this.moveHelper.getCurrentPos()).getNearstWumpusDistance());
+			if (this.state.isInStenchRadius()
+					&& (this.state.getTile(this.moveHelper.getCurrentPos()).getNearstWumpusDistance() > 1
+					|| this.state.getTile(this.moveHelper.getCurrentPos()).getNearstWumpusDistance() == 0)) {
+				System.out.println(
+						"--- END STEP (action [SIT] now SERVER) search found nothing but wumpus is far away. After this new search ---\n");
+				this.triggerNewSearch = true;
+				this.wasSit = true;
+				return HunterAction.SIT;
+			} else {
+				System.out.println("--- END STEP (action [QUIT] now SERVER) search found nothing (empty list) ---\n");
+				return HunterAction.QUIT_GAME;
+			}
 		}
 
 		System.out.println("--- END STEP (action [" + nextAction + "] now SERVER) ---\n");
@@ -289,13 +322,15 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	}
 
 	public void newSearch() {
-		if (this.quitGame)
-			return;
+		// if (this.quitGame)
+		// return;
 
 		if (!this.triggerNewSearch)
 			System.out.println("FAIL");
 
 		this.nextActionListPos.clear();
+
+		this.wasShoot = false;
 
 		Goal goal = null;
 		SearchValues searchValues = null;
@@ -322,10 +357,11 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			if (this.historyListPos.isEmpty()) {
 				removeGoalGoBack();
 				this.triggerNewSearch = true;
+				System.out.println(" -> failed, no history");
 				newSearch();
 				return; // TODO this need some serious testing, possible loops?
 			}
-				
+
 			goal = new GoalGoBack(this.historyListPos.pop(), 9.9f);
 			searchValues = new SearchValues();
 		}
@@ -352,6 +388,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
 	public void setTriggerNewSearch(final boolean triggerNewSearch) {
 		this.triggerNewSearch = triggerNewSearch;
+	}
+
+	public boolean wasShoot() {
+		return this.wasShoot;
 	}
 
 	public void setShootNow(final boolean shootNow) {

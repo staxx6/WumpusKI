@@ -30,6 +30,7 @@ public class State {
 	private MyWumpusAgent agent;
 
 	private HashMap<Vector2, Float> historyStench;
+	private boolean isInStenchRadius;
 
 	private int arrows;
 
@@ -41,6 +42,7 @@ public class State {
 		this.startPos = startPos;
 		this.historyStench = new HashMap<>();
 		this.arrows = startInfo.getShots();
+		this.isInStenchRadius = false;
 
 		this.stenchRadius = startInfo.getStenchDistance();
 
@@ -57,6 +59,15 @@ public class State {
 	
 	public void updatePercept(final HunterPercept percept) {
 		this.percept = percept;
+		if(this.percept.getWumpusStenchRadar().isEmpty()) {
+			this.isInStenchRadius = false; 
+		} else {
+			this.isInStenchRadius = true;
+		}
+	}
+	
+	public boolean isInStenchRadius() {
+		return this.isInStenchRadius;
 	}
 
 	public void removeWumpusAll() {
@@ -74,7 +85,6 @@ public class State {
 		Vector2 hPos = this.moveHelper.getCurrentPos();
 		int hPosX = hPos.getX();
 		int hPosY = hPos.getY();
-		// int radius = this.stenchRadius;
 
 		System.out.println("set stench: " + percept.getWumpusStenchRadar());
 		for (Map.Entry<Integer, Integer> id : percept.getWumpusStenchRadar().entrySet()) {
@@ -82,15 +92,14 @@ public class State {
 			// TODO: Untested
 
 			// --------- history stuff ----------
-			float value = 0;
 			if (this.historyStench.get(hPos) != null) {
-				value += this.historyStench.get(hPos);
+				if(this.historyStench.get(hPos) < id.getValue())
+				this.historyStench.put(new Vector2(this.moveHelper.getCurrentPos().getX(),
+						this.moveHelper.getCurrentPos().getY()), (float) id.getValue());
 			}
-			value += id.getValue();
-			this.historyStench.put(this.moveHelper.getCurrentPos(), value);
 			// --------- history stuff END ----------
 
-			// Go around the hunter and add the wumpus
+			// Go around the hunter and add the wumpus stench
 			for (int y = hPosY - id.getValue(); y <= hPosY + id.getValue(); y++) {
 				for (int x = hPosX - id.getValue(); x <= hPosX + id.getValue(); x++) {
 
@@ -99,31 +108,30 @@ public class State {
 
 					if (distance <= id.getValue()) {
 						float wumpusRisk = id.getValue() - distance;
-						if (wumpusRisk == 0)
-							wumpusRisk = 0.1f;
-						t.addWumpusId(id.getKey(), wumpusRisk);
+						if (wumpusRisk != 0) {
+							t.addWumpusId(id.getKey(), wumpusRisk);
+						}
 					}
 				}
 			}
 		}
-		// showWumpusDebug();
+		 showWumpusDebug();
 	}
 
-	@SuppressWarnings("unused")
 	private void showWumpusDebug() {
-		for (int i = 0; i < view.size(); i++) {
-			for (int j = 0; j < view.size(); j++) {
+		for (int y = 0; y < view.size(); y++) {
+			for (int x = 0; x < view.size(); x++) {
 
-				Tile t = view.get(i).get(j);
+				Tile t = view.get(y).get(x);
 				if (t != null) {
-					Hashtable<Integer, Float> w = view.get(i).get(j).getWumpuse();
+					Hashtable<Integer, Float> w = t.getWumpuse();
 					if (w != null && !w.isEmpty()) {
-						System.out.print(view.get(i).get(j).getWumpuse() + " ");
+						System.out.print(x + "," + y + t.getWumpuse() + " ");
 					} else {
-						System.out.print("         ");
+						System.out.print("              ");
 					}
 				} else {
-					System.out.print("         ");
+					System.out.print("            ");
 				}
 			}
 			System.out.println("");
@@ -206,7 +214,7 @@ public class State {
 
 		getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.EMPTY);
 
-		if (this.moveHelper.getCurrentPos().equals(this.agent.getNextActionListPos().peek())) {
+		if (!this.agent.getNextActionListPos().isEmpty() && this.moveHelper.getCurrentPos().equals(this.agent.getNextActionListPos().peek())) {
 			this.agent.getNextActionListPos().pop();
 
 			if (this.agent.getNextActionListPos().isEmpty()) {
@@ -230,7 +238,7 @@ public class State {
 		}
 
 		System.out.print("Try shoot: ");
-		if (hasArrows()) {
+		if (hasArrows() && !this.agent.wasShoot()) {
 			Tile checkTile = getTile(this.moveHelper.getNextPos());
 			if (checkTile.getTileType() != TileType.WALL || checkTile.getTileType() != TileType.PIT) {
 				System.out.print("no walls/pits " + this.percept.getWumpusStenchRadar());

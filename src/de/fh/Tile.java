@@ -27,12 +27,14 @@ public class Tile {
 		this.type = type;
 		this.pos = pos;
 		this.possibleTypes = new HashSet<>();
+		this.wumpuse = new Hashtable<>();
 	}
 	
 	public Tile(final TileType type, final int x, final int y) {
 		this.type = type;
 		this.pos = new Vector2(x, y);
 		this.possibleTypes = new HashSet<>();
+		this.wumpuse = new Hashtable<>();
 	}
 	
 	/*
@@ -71,6 +73,16 @@ public class Tile {
 	public int getPosY() {
 		return this.pos.getY();
 	}
+	
+	public float getNearstWumpusDistance() {
+		float dis = 0;
+		for(Integer i : getWumpusIds()) {
+			if(getWumpusDistance(i) < dis) {
+				dis = getWumpusDistance(i);
+			}
+		}
+		return dis;
+	}
 
 	/*
 	 * @return all possible tiles. Could return NULL!
@@ -104,11 +116,7 @@ public class Tile {
 		this.breeze = breeze;
 	}
 
-	/*
-	 * @return Could be a null return = no wumpus
-	 */
 	public Set<Integer> getWumpusIds() {
-		if(wumpuse == null) return null;	
 		return wumpuse.keySet();
 	}
 	
@@ -121,7 +129,6 @@ public class Tile {
 	}
 
 	public void addWumpusId(final int id, final float distance) {
-		if(this.wumpuse == null) this.wumpuse = new Hashtable<>();
 		this.wumpuse.put(id, distance);
 	}
 	
@@ -131,7 +138,6 @@ public class Tile {
 	}
 	
 	public void removeAllWumpusIds() {
-		if(this.wumpuse != null)
 			this.wumpuse.clear();
 	}
 	

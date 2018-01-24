@@ -127,7 +127,8 @@ public class Search {
 
 	// Evaluate node value with A*-Algo
 	private void evaluateNode(final Node expansionCandidate) {
-		if(this.extraDebug) System.out.print(" { ");
+		if (this.extraDebug)
+			System.out.print(" { ");
 		Tile tile = expansionCandidate.getTile();
 		NodeValue nodeValue = expansionCandidate.getValue();
 
@@ -139,27 +140,38 @@ public class Search {
 			if (tile.getTileType() == TileType.UNKNOWN) {
 				for (TileType type : tile.getPossibleTypes()) {
 					if (type == TileType.WALL) {
-						if(this.extraDebug) System.out.print("posWall+" + this.searchValues.getWall());
+						if (this.extraDebug)
+							System.out.print("posWall+" + this.searchValues.getWall());
 						risk += this.searchValues.getWall();
-					}
-					else if (type == TileType.PIT) {
-						if(this.extraDebug) System.out.print(" posPit+" + this.searchValues.getPit());
+					} else if (type == TileType.PIT) {
+						if (this.extraDebug)
+							System.out.print(" posPit+" + this.searchValues.getPit());
 						risk += this.searchValues.getPit();
 					}
 				}
 			}
 
 			if (tile.getWumpusIds() != null && !tile.getWumpusIds().isEmpty()) {
+				float wumpusRisk = 0;
 				for (int id : tile.getWumpusIds()) {
+					System.out.println(" id: " + id + " has distance: " + tile.getWumpusDistance(id) + " ");
 					if (tile.getWumpusDistance(id) != 0) {
-						if(this.extraDebug) System.out.print(" wumpi+" + this.searchValues.getWumpusDistanceFac() / tile.getWumpusDistance(id));
-						risk += this.searchValues.getWumpusDistanceFac() / tile.getWumpusDistance(id);
+						if (this.extraDebug)
+							System.out.print(
+									" wumpi+" + this.searchValues.getWumpusDistanceFac() / tile.getWumpusDistance(id));
+
+						if (tile.getWumpusDistance(id) > wumpusRisk) {
+							wumpusRisk = tile.getWumpusDistance(id);
+						}
 					}
 				}
+				risk += this.searchValues.getWumpusDistanceFac() / wumpusRisk;
 			}
 			if (this.state.getHistoryStench(tile.getPosVector()) != 0) {
-				if(this.extraDebug) System.out.print(" historyWumpi+" + this.searchValues.getWumpusDistanceFac() / this.state.getHistoryStench(tile.getPosVector()));
-				risk += this.searchValues.getWumpusDistanceFac() / this.state.getHistoryStench(tile.getPosVector());
+				if (this.extraDebug)
+					System.out.print(" historyWumpi+" + this.searchValues.getWumpusDistanceFac()
+							/ this.state.getHistoryStench(tile.getPosVector()));
+				risk += this.searchValues.getWumpusDistanceFac() / this.state.getHistoryStench(tile.getPosVector()) / 2;
 			}
 		}
 
@@ -180,7 +192,8 @@ public class Search {
 		nodeValue.setRisk(risk);
 		nodeValue.setPathCost(pathCost);
 		nodeValue.setDistanceCost(distanceCost);
-		if(this.extraDebug) System.out.println(" } ");
+		if (this.extraDebug)
+			System.out.println(" } ");
 	}
 
 	// Insert the node to openList, value priority (from A*-Algo)
