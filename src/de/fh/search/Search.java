@@ -55,7 +55,7 @@ public class Search {
 	}
 	
 	/*
-	 * Expand the node. It prefers the north node
+	 * Expand the node, clockwise
 	 */
 	private void expandNode(final Node previewNode) {
 		if(this.debugOut) System.out.println("@expandNode (" + previewNode.getTile().getPosVector() + "): ");
@@ -116,7 +116,6 @@ public class Search {
 	}
 	
 	// Evaluate node value with A*-Algo
-	// TODO NEXT STUFF HERE FOR GO BACK
 	private void evaluateNode(final Node expansionCandidate) {
 		Tile tile = expansionCandidate.getTile();
 		NodeValue nodeValue = expansionCandidate.getValue();
