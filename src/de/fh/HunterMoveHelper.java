@@ -22,6 +22,28 @@ public class HunterMoveHelper {
 		this.isTurning = false;
 		this.nextDir = hunterDir;
 	}
+	
+	public Vector2 getNextPos() {
+		Vector2 nextPos = new Vector2();
+		switch (this.dir) {
+		case NORTH:
+			nextPos.setY(this.pos.getY() - 1);
+			break;
+		case EAST:
+			nextPos.setX(this.pos.getX() + 1);
+			break;
+		case SOUTH:
+			nextPos.setY(this.pos.getY() + 1);
+			break;
+		case WEST:
+			nextPos.setX(this.pos.getX() - 1);
+			break;
+		default:
+			System.out.println("ERROR: Direction dosn't exist!");
+			break;
+		}
+		return nextPos;
+	}
 
 	public HunterAction moveTo(final Vector2 goToPos) {
 		System.out.println("call move to: " + goToPos);

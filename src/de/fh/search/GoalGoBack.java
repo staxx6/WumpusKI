@@ -13,10 +13,11 @@ public class GoalGoBack extends Goal {
 	public GoalGoBack(final Vector2 pos, final float riskTolerance) {
 		super(riskTolerance);
 		this.pos = pos;
-		
-		this.useRisk = true;
-		this.usePathCost = true;
-		this.useDistanceCost = true;
+
+		// TODO set it all to false
+		this.useRisk = false;
+		this.usePathCost = false;
+		this.useDistanceCost = false;
 	}
 	
 	/*

@@ -20,7 +20,7 @@ public class Tile {
 	private Set<TileType> possibleTypes;
 	private boolean breeze = false; //TODO write down why it shouldn't be a TileType
 //	private Set<Integer> wumpusIds;
-	private Hashtable<Integer, Integer> wumpuse;
+	private Hashtable<Integer, Float> wumpuse;
 	
 	public Tile(final TileType type, final Vector2 pos) {
 		System.out.println("Tile const got: " + pos);
@@ -112,15 +112,15 @@ public class Tile {
 		return wumpuse.keySet();
 	}
 	
-	public Hashtable<Integer, Integer> getWumpuse() {
+	public Hashtable<Integer, Float> getWumpuse() {
 		return this.wumpuse;
 	}
 	
-	public int getWumpusDistance(final int id) {
+	public float getWumpusDistance(final int id) {
 		return wumpuse.get(id);
 	}
 
-	public void addWumpusId(final int id, final int distance) {
+	public void addWumpusId(final int id, final float distance) {
 		if(this.wumpuse == null) this.wumpuse = new Hashtable<>();
 		this.wumpuse.put(id, distance);
 	}

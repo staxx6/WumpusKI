@@ -18,8 +18,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
-import com.sun.org.apache.bcel.internal.generic.GOTO_W;
-
 public class MyWumpusAgent extends WumpusHunterAgent {
 
 	private State state;
@@ -34,13 +32,16 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	private boolean wasScream;
 	private Set<Goal.Goals> goals;
 	private Set<Goal.Goals> tmpGoals;
-	// private boolean goalGold, goalKill, goalLocation, goalGoBack;
 
 	private Stack<Vector2> nextActionListPos;
-	private Stack<Vector2> historyListPos;
+	private Stack<Vector2> historyListPos; // could grow like hell
 
 	private boolean quitGame;
 	private boolean triggerNewSearch;
+	private boolean blockGoBackGoal;
+	private boolean wasInRadar;
+
+	private boolean shootNow;
 
 	public static void main(String[] args) {
 
@@ -93,18 +94,24 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.goals.add(Goals.KILL);
 
 			this.triggerNewSearch = true;
+			this.blockGoBackGoal = false;
+			this.wasInRadar = false;
 
 			this.wasScream = false;
 			this.quitGame = false;
 
 			this.nextActionListPos = new Stack<>();
 			this.historyListPos = new Stack<>();
-			this.historyListPos.push(this.moveHelper.getCurrentPos());
+			this.historyListPos
+					.push(new Vector2(this.moveHelper.getCurrentPos().getX(), this.moveHelper.getCurrentPos().getY()));
+
+			this.shootNow = false;
 
 			this.initDone = true;
 
 			System.out.println("DEBUG: Game initialized");
 		}
+		this.state.updatePercept(percept);
 
 		// -------- Server response --------
 
@@ -135,13 +142,21 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			this.state.noMoreShoots();
 		}
 
+		if (actionEffect == HunterActionEffect.GOLD_FOUND) {
+			System.out.println("DEBUG: Gold found!");
+		}
+
 		if (actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
 			System.out.println("DEBUG: Movement SUCCESSFUL");
+			// if (this.moveHelper.getCurrentPos().equals(new Vector2(20, 18))) {
+			// System.out.println("--------------------------------");
+			// System.out.println("-------HERE------------");
+			// System.out.println("--------------------------------");
+			// }
 			this.state.movementSuccessful();
 
-			if (percept.getWumpusStenchRadar().isEmpty()) {
-				this.historyListPos.push(this.moveHelper.getCurrentPos());
-			}
+			this.historyListPos
+					.push(new Vector2(this.moveHelper.getCurrentPos().getX(), this.moveHelper.getCurrentPos().getY()));
 		}
 
 		// -------- Server response END --------
@@ -164,30 +179,50 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 		}
 
 		if (percept.isGlitter()) {
-			System.out.println("GOLD found!");
+			System.out.println("GOLD found! Trigger new search.");
 			this.state.glitter();
 			this.triggerNewSearch = true;
-			System.out.println("trigger by glitter");
 		}
 
+		// If out of radar:
 		if (percept.getWumpusStenchRadar().isEmpty()) {
-			this.state.removeWumpusAll();
-			removeGoalGoBack();
-			this.triggerNewSearch = true; // TODO: possible loop?!
-			// newSearch(); // possible loop?!
+			if (this.wasInRadar) {
+				this.state.removeWumpusAll();
+				removeGoalGoBack();
+				this.blockGoBackGoal = false;
+				this.triggerNewSearch = true; // TODO: possible loop?!
+				this.wasInRadar = false;
+				System.out.println("trigger by going radar OUT");
+				// newSearch(); // possible loop?!
+			}
 		} else {
-			if (this.state.getHunterTile().getWumpuse() != null && !this.state.getHunterTile().getWumpuse().isEmpty()
-					&& !this.moveHelper.isTurn()) {
-				/*
-				 * TODO: (right pos or one down?) // what is it even doing? this.goalGoBack =
-				 * true; -> go history -> so long if in radar -> list empty -> new goalGold
-				 */
-				setGoalGoBack();
-				this.triggerNewSearch = true;
-				System.out.println("trigger by effect radar");
+			this.wasInRadar = true;
+			System.out.print("Going in a radar: ");
+
+			if (!this.historyListPos.isEmpty()) {
+				if (!this.moveHelper.isTurn()) {
+					if (!this.blockGoBackGoal) {
+						Vector2 tmpPos = this.historyListPos.pop();
+						if (!this.historyListPos.isEmpty()) {
+							if (!this.historyListPos.isEmpty()
+									&& !this.historyListPos.peek().equals(this.moveHelper.getCurrentPos())) {
+								setGoalGoBack();
+								this.blockGoBackGoal = true;
+								this.triggerNewSearch = true;
+								System.out.println("Stench triggered new search");
+							} else {
+								this.historyListPos.push(tmpPos);
+							}
+						}
+					}
+				}
 			}
 			this.state.removeWumpusAll();
 			this.state.setWumpusStench();
+		}
+
+		if (percept.isScream()) {
+			this.triggerNewSearch = true;
 		}
 
 		// -------- Get Percept stuff END --------
@@ -225,6 +260,13 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 			return HunterAction.SIT;
 		}
 
+		if (this.shootNow) {
+			System.out.println("--- END STEP (action [SHOOT] now SERVER) gold FOUND ---\n");
+			this.shootNow = false;
+			this.state.arrowShot();
+			return HunterAction.SHOOT;
+		}
+
 		if (this.state.getHunterTile().getTileType() == TileType.GOLD) {
 			System.out.println("--- END STEP (action [GRAB] now SERVER) gold FOUND ---\n");
 			this.state.getTile(this.moveHelper.getCurrentPos()).setTileType(TileType.EMPTY);
@@ -249,11 +291,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 	public void newSearch() {
 		if (this.quitGame)
 			return;
+
 		if (!this.triggerNewSearch)
 			System.out.println("FAIL");
 
-		// System.out.println("Issued new search: gold: " + this.goalGold + " loc: " +
-		// this.goalLocation);
 		this.nextActionListPos.clear();
 
 		Goal goal = null;
@@ -278,12 +319,14 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
 		if (this.goals.contains(Goals.GO_BACK)) {
 			System.out.println("# Start goalGoBack search: ");
-			if(this.historyListPos.empty()) {
+			if (this.historyListPos.isEmpty()) {
 				removeGoalGoBack();
+				this.triggerNewSearch = true;
 				newSearch();
 				return; // TODO this need some serious testing, possible loops?
 			}
-			goal = new GoalGoBack(this.historyListPos.pop(), 9.5f);
+				
+			goal = new GoalGoBack(this.historyListPos.pop(), 9.9f);
 			searchValues = new SearchValues();
 		}
 
@@ -309,6 +352,10 @@ public class MyWumpusAgent extends WumpusHunterAgent {
 
 	public void setTriggerNewSearch(final boolean triggerNewSearch) {
 		this.triggerNewSearch = triggerNewSearch;
+	}
+
+	public void setShootNow(final boolean shootNow) {
+		this.shootNow = shootNow;
 	}
 
 	/*

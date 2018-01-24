@@ -2,6 +2,7 @@ package de.fh;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,8 @@ public class State {
 
 	private HashMap<Vector2, Float> historyStench;
 
+	private int arrows;
+
 	public State(final Vector2 startPos, final WumpusStartInfo startInfo, final HunterMoveHelper moveHelper,
 			final HunterPercept percept, final MyWumpusAgent agent) {
 		this.moveHelper = moveHelper;
@@ -37,6 +40,7 @@ public class State {
 		this.agent = agent;
 		this.startPos = startPos;
 		this.historyStench = new HashMap<>();
+		this.arrows = startInfo.getShots();
 
 		this.stenchRadius = startInfo.getStenchDistance();
 
@@ -49,6 +53,10 @@ public class State {
 			}
 		}
 		this.currViewSizeLimit = new Vector2(this.view.get(0).size(), this.view.size());
+	}
+	
+	public void updatePercept(final HunterPercept percept) {
+		this.percept = percept;
 	}
 
 	public void removeWumpusAll() {
@@ -63,60 +71,42 @@ public class State {
 	}
 
 	public void setWumpusStench() {
-		System.out.println("radar says: " + percept.getWumpusStenchRadar());
-
 		Vector2 hPos = this.moveHelper.getCurrentPos();
 		int hPosX = hPos.getX();
 		int hPosY = hPos.getY();
-		int radius = this.stenchRadius;
-		
+		// int radius = this.stenchRadius;
+
+		System.out.println("set stench: " + percept.getWumpusStenchRadar());
 		for (Map.Entry<Integer, Integer> id : percept.getWumpusStenchRadar().entrySet()) {
-			
+
 			// TODO: Untested
+
+			// --------- history stuff ----------
 			float value = 0;
-			if(this.historyStench.get(hPos) != null) {
+			if (this.historyStench.get(hPos) != null) {
 				value += this.historyStench.get(hPos);
 			}
 			value += id.getValue();
 			this.historyStench.put(this.moveHelper.getCurrentPos(), value);
+			// --------- history stuff END ----------
 
 			// Go around the hunter and add the wumpus
-			for (int y = hPosY - radius; y <= hPosY + radius; y++) {
-				for (int x = hPosX - radius; x <= hPosX + radius; x++) {
+			for (int y = hPosY - id.getValue(); y <= hPosY + id.getValue(); y++) {
+				for (int x = hPosX - id.getValue(); x <= hPosX + id.getValue(); x++) {
 
 					Tile t = getTile(x, y);
 					int distance = Math.abs(hPosX - t.getPosX()) + Math.abs(hPosY - t.getPosY());
 
-					if (distance <= radius)
-						t.addWumpusId(id.getKey(), radius - distance);
-
-					// Here is the wumpus with given distance/ stench
-					// if(distance == id.getValue()) {
-					//// t.addWumpusId(id.getKey(), id.getValue()); // TODO: not needed
-					//
-					// // Go around the possible wumpus tile and set stench values
-					// // which is needed for the search
-					// System.out.println("Have set wumpus set @" + x + "x und " + "y");
-					//
-					// for(int wY = t.getPosY() - radius; wY < t.getPosY() + radius; wY++) {
-					// for(int wX = t.getPosX() - radius; wX < t.getPosX() + radius; wX++) {
-					//
-					//
-					// Tile tW = getTile(wX, wY);
-					// int manDistance = Math.abs(t.getPosX() - tW.getPosX())
-					// + Math.abs(t.getPosY() - tW.getPosY());
-					//
-					// if(manDistance <= radius) {
-					// tW.addWumpusId(id.getKey(), manDistance);
-					// }
-					// }
-					// }
-					// }
-					// }
+					if (distance <= id.getValue()) {
+						float wumpusRisk = id.getValue() - distance;
+						if (wumpusRisk == 0)
+							wumpusRisk = 0.1f;
+						t.addWumpusId(id.getKey(), wumpusRisk);
+					}
 				}
 			}
-			System.out.println("HELLO " + getTile(20, 17).getWumpuse());
 		}
+		// showWumpusDebug();
 	}
 
 	@SuppressWarnings("unused")
@@ -126,7 +116,7 @@ public class State {
 
 				Tile t = view.get(i).get(j);
 				if (t != null) {
-					Hashtable<Integer, Integer> w = view.get(i).get(j).getWumpuse();
+					Hashtable<Integer, Float> w = view.get(i).get(j).getWumpuse();
 					if (w != null && !w.isEmpty()) {
 						System.out.print(view.get(i).get(j).getWumpuse() + " ");
 					} else {
@@ -221,41 +211,67 @@ public class State {
 
 			if (this.agent.getNextActionListPos().isEmpty()) {
 				System.out.print("Search goal/location found! Check for end goalLoc: ");
-				if (this.agent.getGoals().contains(Goals.LOCATION) 
+				if (this.agent.getGoals().contains(Goals.LOCATION)
 						&& this.moveHelper.getCurrentPos().equals(this.startPos)) {
 					System.out.println("########### Game finished! ###########");
 					this.agent.setQuitGame(true);
 				} else {
 					this.agent.setTriggerNewSearch(true);
-					;
-					System.out.println("trigger by effect move");
+					System.out.println("\n trigger by effect move");
+				}
+
+				if (this.agent.getGoals().contains(Goals.GO_BACK)) {
+					System.out.println("Go back goal found!");
+					this.agent.removeGoalGoBack();
+					this.agent.setTriggerNewSearch(true);
+					System.out.println("\n trigger by go back found");
 				}
 			}
 		}
+
+		System.out.print("Try shoot: ");
+		if (hasArrows()) {
+			Tile checkTile = getTile(this.moveHelper.getNextPos());
+			if (checkTile.getTileType() != TileType.WALL || checkTile.getTileType() != TileType.PIT) {
+				System.out.print("no walls/pits " + this.percept.getWumpusStenchRadar());
+				for (Map.Entry<Integer, Integer> id : percept.getWumpusStenchRadar().entrySet()) {
+					if (id.getValue() < 3) {
+						this.agent.setShootNow(true);
+//						System.out.println("Set shoot true");
+					} else {
+//						System.out.println("not under 3");
+					}
+				}
+				System.out.println("done shoot or nothin done");
+			} else {
+//				System.out.println("wall");
+			}
+		} else {
+			System.out.println("no arrows");
+		}
 	}
-	
+
 	// TODO: Untested
 	public void rumble() {
-		this.historyStench.replaceAll((v, f) -> { 
-			if(f < 1) { 
+		this.historyStench.replaceAll((v, f) -> {
+			if (f < 1) {
 				f = 0f;
-			} else { 
-				f /= 2;
+			} else {
+				f /= 0.5f;
 			}
 			return f;
-		}
-		);
-		
-		for(Vector2 v : historyStench.keySet()) {
-			if(this.historyStench.get(v) == 0)
+		});
+
+		for (Vector2 v : historyStench.keySet()) {
+			if (this.historyStench.get(v) == 0)
 				this.historyStench.remove(v);
 		}
 	}
 
-	//Percept scream and server effect killed?
+	// Percept scream and server effect killed?
 	public void scream() {
 		// TODO all? fix only for one
-		this.agent.getGoals().remove(Goals.KILL);
+		// this.agent.getGoals().remove(Goals.KILL);
 	}
 
 	public void breeze() {
@@ -278,7 +294,7 @@ public class State {
 		this.agent.getGoals().add(Goals.LOCATION);
 		this.agent.getGoals().remove(Goals.GOLD);
 	}
-	
+
 	/*
 	 * Return the tile where the hunter is standing
 	 * 
@@ -319,6 +335,26 @@ public class State {
 
 	public Vector2 getCurrViewSizeLimit() {
 		return this.currViewSizeLimit;
+	}
+
+	public float getHistoryStench(final Vector2 pos) {
+		if (this.historyStench.get(pos) == null) {
+			return 0;
+		} else {
+			return this.historyStench.get(pos);
+		}
+	}
+
+	public boolean hasArrows() {
+		if (this.arrows > 0)
+			return true;
+		else
+			return false;
+	}
+
+	public void arrowShot() {
+		this.arrows -= 1;
+		// TODO
 	}
 
 	/*
